@@ -10,7 +10,7 @@ impl ContactStore {
         contacts.push(Contact {
             name: "James Yaro".to_string(),
             phone: "08122121474".to_string(),
-            email: "onuhjamesyaro@gmail.com".to_string(),
+            email: "james406@gmail.com".to_string(),
         });
         Self { contacts }
     }
@@ -25,8 +25,7 @@ impl ContactStore {
 
     pub fn delete(&mut self, name: &str) -> bool {
         let initial_len = self.contacts.len();
-        self.contacts
-            .retain(|c| c.name.to_lowercase() != name.to_lowercase());
+        self.contacts.retain(|c| c.name.to_lowercase() != name.to_lowercase());
         self.contacts.len() < initial_len
     }
 }
