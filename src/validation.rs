@@ -13,3 +13,27 @@ pub fn validate_email(email: &str) -> bool {
     let re = Regex::new(r"^[\w\.-]+@[\w\.-]+\.\w+$").unwrap();
     re.is_match(email)
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_validate_name() {
+        assert!(validate_name("Alice"));
+        assert!(!validate_name("123Bob"));
+    }
+
+    #[test]
+    fn test_validate_phone() {
+        assert!(validate_phone("08123456789"));
+        assert!(!validate_phone("1234"));
+    }
+
+    #[test]
+    fn test_validate_email() {
+        assert!(validate_email("user@example.com"));
+        assert!(!validate_email("invalid-email"));
+    }
+}
