@@ -1,31 +1,38 @@
 use crate::domain::Contact;
 
-pub struct ContactStore {
-    pub contacts: Vec<Contact>,
-}
-
-impl ContactStore {
-    pub fn new() -> Self {
-        let mut contacts = Vec::new();
-        contacts.push(Contact {
-            name: "James Yaro".to_string(),
-            phone: "08122121474".to_string(),
-            email: "james406@gmail.com".to_string(),
-        });
-        Self { contacts }
+impl Contact {
+    pub fn new(name: &str, phone: &str, email: &str) -> Self {
+        Self { 
+            name: name.to_string(),
+            phone: phone.to_string(),
+            email: email.to_string()
+         }
     }
 
-    pub fn add(&mut self, contact: Contact) {
-        self.contacts.push(contact);
+    pub fn to_line(&self) -> String {
+        format!("{},{},{}", self.name, self.phone, self.email)
     }
 
-    pub fn list(&self) -> &Vec<Contact> {
-        &self.contacts
+    pub fn from_line(line: &str) -> Option<Self> {
+        let parts: Vec<&str> = line.split(',').collect();
+        if parts.len() == 3 {
+            Some(Self::new(parts[0].trim(), parts[1].trim(), parts[2].trim()))
+        } else {
+            None
+        }
     }
 
-    pub fn delete(&mut self, name: &str) -> bool {
-        let initial_len = self.contacts.len();
-        self.contacts.retain(|c| c.name.to_lowercase() != name.to_lowercase());
-        self.contacts.len() < initial_len
-    }
+    // pub fn add(&mut self, contact: Contact) {
+    //     self.contacts.push(contact);
+    // }
+
+    // pub fn list(&self) -> &Vec<Contact> {
+    //     &self.contacts
+    // }
+
+    // pub fn delete(&mut self, name: &str) -> bool {
+    //     let initial_len = self.contacts.len();
+    //     self.contacts.retain(|c| c.name.to_lowercase() != name.to_lowercase());
+    //     self.contacts.len() < initial_len
+    // }
 }
