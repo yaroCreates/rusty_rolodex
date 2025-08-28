@@ -21,18 +21,4 @@ impl Contact {
             None
         }
     }
-
-    // pub fn add(&mut self, contact: Contact) {
-    //     self.contacts.push(contact);
-    // }
-
-    // pub fn list(&self) -> &Vec<Contact> {
-    //     &self.contacts
-    // }
-
-    // pub fn delete(&mut self, name: &str) -> bool {
-    //     let initial_len = self.contacts.len();
-    //     self.contacts.retain(|c| c.name.to_lowercase() != name.to_lowercase());
-    //     self.contacts.len() < initial_len
-    // }
 }
