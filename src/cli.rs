@@ -1,11 +1,28 @@
-use std::fs;
+use std::{env, fs};
 use std::io::{self, Write};
 
 use crate::domain::Contact;
+use crate::store::mem::{ContactStore, FileStore, MemStore};
 use crate::validation::{validate_email, validate_name, validate_phone};
 
 pub fn run_cli() {
-    let mut store = load_contacts();
+
+    let store_type = env::var("STORE_TYPE").unwrap_or_else(|_| "file".to_string());
+
+    let store: Box<dyn ContactStore> = match store_type.as_str() {
+        "mem" => {
+            println!("Using MemStore");
+            Box::new(MemStore::new())
+        }
+        _ => {
+            println!("Using FileStore");
+            Box::new(FileStore::new("contacts.txt"))
+        }
+    };
+
+    let mut contacts = store.load();
+
+    // let mut store = load_contacts();
 
     loop {
         println!("\nWelcome to my Contact Manager\n");
@@ -18,9 +35,9 @@ pub fn run_cli() {
         let menu_option = read_input();
 
         match menu_option.as_str() {
-            "1" => add_contact(&mut store),
-            "2" => view_contacts(&store),
-            "3" => delete_contact(&mut store),
+            "1" => add_contact(store.as_ref(), &mut contacts),
+            "2" => view_contacts(&contacts),
+            "3" => delete_contact(store.as_ref(), &mut contacts),
             "4" => {
                 println!("Hope to see you back soon!");
                 break;
@@ -30,7 +47,7 @@ pub fn run_cli() {
     }
 }
 
-fn add_contact(store: &mut Vec<Contact>) {
+fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) {
     println!("\n--- Add Contact ---");
 
     let name = loop {
@@ -66,8 +83,9 @@ fn add_contact(store: &mut Vec<Contact>) {
         }
     };
 
-    store.push(Contact::new(&name, &phone, &email));
-    save_contacts(store);
+    contacts.push(Contact::new(&name, &phone, &email));
+    storage.save(contacts);
+    println!("Contact added!");
 }
 
 fn view_contacts(store: &Vec<Contact>) {
@@ -89,17 +107,18 @@ fn view_contacts(store: &Vec<Contact>) {
 
 }
 
-fn delete_contact(store: &mut Vec<Contact>) {
+fn delete_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) {
     println!("\n--- Delete Contact ---");
     print!("Enter name to delete: ");
     io::stdout().flush().unwrap();
     let name = read_input();
 
-    let length_before = store.len();
-    store.retain(|c| c.name != name);
+    let length_before = contacts.len();
+    contacts.retain(|c| c.name != name);
 
-    if store.len() < length_before {
+    if contacts.len() < length_before {
         println!("Contact deleted.");
+        storage.save(contacts);
     } else {
         println!("Contact not found.");
     }
@@ -111,17 +130,17 @@ fn read_input() -> String {
     input.trim().to_string()
 }
 
-fn load_contacts() -> Vec<Contact> {
-    match fs::read_to_string("contacts.txt") {
-        Ok(data) => data
-            .lines()
-            .filter_map(Contact::from_line) 
-            .collect(),
-        Err(_) => Vec::new(), 
-    }
-}
+// fn load_contacts() -> Vec<Contact> {
+//     match fs::read_to_string("contacts.txt") {
+//         Ok(data) => data
+//             .lines()
+//             .filter_map(Contact::from_line) 
+//             .collect(),
+//         Err(_) => Vec::new(), 
+//     }
+// }
 
-fn save_contacts(contacts: &Vec<Contact>) {
-    let data: String = contacts.iter().map(|c| c.to_line()).collect::<Vec<_>>().join("\n");
-    fs::write("contacts.txt", data).expect("Failed to save contacts");
-}
+// fn save_contacts(contacts: &Vec<Contact>) {
+//     let data: String = contacts.iter().map(|c| c.to_line()).collect::<Vec<_>>().join("\n");
+//     fs::write("contacts.txt", data).expect("Failed to save contacts");
+// }
