@@ -2,10 +2,10 @@ use std::{env, fs};
 use std::io::{self, Write};
 
 use crate::domain::Contact;
-use crate::store::mem::{ContactStore, FileStore, MemStore};
+use crate::store::mem::{AppError, ContactStore, FileStore, MemStore};
 use crate::validation::{validate_email, validate_name, validate_phone};
 
-pub fn run_cli() {
+pub fn run_cli() -> Result<(), AppError> {
 
     let store_type = env::var("STORE_TYPE").unwrap_or_else(|_| "file".to_string());
 
@@ -20,7 +20,7 @@ pub fn run_cli() {
         }
     };
 
-    let mut contacts = store.load();
+    let mut contacts = store.load()?;
 
     // let mut store = load_contacts();
 
@@ -35,7 +35,7 @@ pub fn run_cli() {
         let menu_option = read_input();
 
         match menu_option.as_str() {
-            "1" => add_contact(store.as_ref(), &mut contacts),
+            "1" => add_contact(store.as_ref(), &mut contacts)?,
             "2" => view_contacts(&contacts),
             "3" => delete_contact(store.as_ref(), &mut contacts),
             "4" => {
@@ -45,9 +45,10 @@ pub fn run_cli() {
             _ => println!("Invalid selection, please choose from 1-4."),
         }
     }
+    Ok(())
 }
 
-fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) {
+fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Result<(), AppError>{
     println!("\n--- Add Contact ---");
 
     let name = loop {
@@ -84,8 +85,9 @@ fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) {
     };
 
     contacts.push(Contact::new(&name, &phone, &email));
-    storage.save(contacts);
+    storage.save(contacts)?;
     println!("Contact added!");
+    Ok(())
 }
 
 fn view_contacts(store: &Vec<Contact>) {
@@ -129,18 +131,3 @@ fn read_input() -> String {
     io::stdin().read_line(&mut input).unwrap();
     input.trim().to_string()
 }
-
-// fn load_contacts() -> Vec<Contact> {
-//     match fs::read_to_string("contacts.txt") {
-//         Ok(data) => data
-//             .lines()
-//             .filter_map(Contact::from_line) 
-//             .collect(),
-//         Err(_) => Vec::new(), 
-//     }
-// }
-
-// fn save_contacts(contacts: &Vec<Contact>) {
-//     let data: String = contacts.iter().map(|c| c.to_line()).collect::<Vec<_>>().join("\n");
-//     fs::write("contacts.txt", data).expect("Failed to save contacts");
-// }
