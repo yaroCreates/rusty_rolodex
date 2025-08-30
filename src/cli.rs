@@ -2,7 +2,7 @@ use std::{env, fs};
 use std::io::{self, Write};
 
 use crate::domain::Contact;
-use crate::store::mem::{AppError, ContactStore, FileStore, MemStore};
+use crate::store::mem::{retry, AppError, ContactStore, FileStore, MemStore};
 use crate::validation::{validate_email, validate_name, validate_phone};
 
 pub fn run_cli() -> Result<(), AppError> {
@@ -37,7 +37,7 @@ pub fn run_cli() -> Result<(), AppError> {
         match menu_option.as_str() {
             "1" => add_contact(store.as_ref(), &mut contacts)?,
             "2" => view_contacts(&contacts),
-            "3" => delete_contact(store.as_ref(), &mut contacts),
+            "3" => delete_contact(store.as_ref(), &mut contacts)?,
             "4" => {
                 println!("Hope to see you back soon!");
                 break;
@@ -51,38 +51,30 @@ pub fn run_cli() -> Result<(), AppError> {
 fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Result<(), AppError>{
     println!("\n--- Add Contact ---");
 
-    let name = loop {
-        print!("Enter name: ");
-        io::stdout().flush().unwrap();
-        let input = read_input();
-        if validate_name(&input) {
-            break input;
+    let name: String = retry("Enter name: ", |s| {
+        if !validate_name(&s) {
+            Err(AppError::Parse("Name cannot be empty".into()))
         } else {
-            println!("Name must be alphabetic and non-empty.");
+            Ok(s.to_string())
         }
-    };
+    });
 
-    let phone = loop {
-        print!("Enter phone: ");
-        io::stdout().flush().unwrap();
-        let input = read_input();
-        if validate_phone(&input) {
-            break input;
-        } else {
-            println!("Phone must be digits only and at least 10 digits.");
-        }
-    };
 
-    let email = loop {
-        print!("Enter email: ");
-        io::stdout().flush().unwrap();
-        let input = read_input();
-        if validate_email(&input) {
-            break input;
+    let phone: String = retry("Enter phone: ", |s| {
+        if validate_phone(&s) {
+            Ok(s.to_string())
         } else {
-            println!("Invalid email format.");
+            Err(AppError::Parse("Phone must contain only digits and be more than 10 digits".into()))
         }
-    };
+    });
+
+    let email: String = retry("Enter email: ", |s| {
+        if validate_email(&s) {
+            Ok(s.to_string())
+        } else {
+            Err(AppError::Parse("Invalid email format".into()))
+        }
+    });
 
     contacts.push(Contact::new(&name, &phone, &email));
     storage.save(contacts)?;
@@ -109,21 +101,30 @@ fn view_contacts(store: &Vec<Contact>) {
 
 }
 
-fn delete_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) {
+fn delete_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Result<(), AppError> {
     println!("\n--- Delete Contact ---");
-    print!("Enter name to delete: ");
-    io::stdout().flush().unwrap();
-    let name = read_input();
+    // print!("Enter name to delete: ");
+    // io::stdout().flush().unwrap();
+    // let name = read_input();
+
+    let name: String = retry("Enter name to delete: ", |s| {
+        if s.is_empty() {
+            Err(AppError::Parse("Name cannot be empty".into()))
+        } else {
+            Ok(s.to_string())
+        }
+    });
 
     let length_before = contacts.len();
     contacts.retain(|c| c.name != name);
 
     if contacts.len() < length_before {
+        storage.save(contacts)?;
         println!("Contact deleted.");
-        storage.save(contacts);
     } else {
         println!("Contact not found.");
     }
+    Ok(())
 }
 
 fn read_input() -> String {

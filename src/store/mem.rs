@@ -1,4 +1,4 @@
-use std::{fs, io};
+use std::{fs, io::{self, Write}};
 
 use crate::domain::Contact;
 
@@ -25,15 +25,46 @@ impl Contact {
     }
 }
 
+pub fn retry<F, T>(prompt: &str, f: F) -> T
+where
+    F: Fn(&str) -> Result<T, AppError>,
+{
+    loop {
+        let mut input = String::new();
+        print!("{}", prompt);
+        if let Err(e) = io::stdout().flush() {
+            eprintln!("Error flushing stdout: {:?}", e);
+        }
+
+        if let Err(e) = io::stdin().read_line(&mut input) {
+            eprintln!("Error reading input: {:?}", e);
+            continue;
+        }
+
+        match f(input.trim()) {
+            Ok(value) => return value,
+            Err(e) => {
+                eprintln!("⚠️ {}", e);
+                continue;
+            }
+        }
+    }
+}
+
+
 #[derive(Debug)]
 pub enum AppError {
     Io(std::io::Error),
     Parse(String),
 }
 
-impl From<std::io::Error> for AppError {
-    fn from(err: std::io::Error) -> Self {
-        AppError::Io(err)
+impl std::fmt::Display for AppError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AppError::Io(err) =>write!(f, "I/O error: {}", err),
+            AppError::Parse(msg) => write!(f, "Parse error: {}", msg),
+
+        }
     }
 }
 

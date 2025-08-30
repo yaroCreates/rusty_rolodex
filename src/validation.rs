@@ -39,12 +39,23 @@ pub fn validate_email(email: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use crate::domain::Contact;
+
     use super::*;
 
     #[test]
     fn test_validate_name() {
         assert!(validate_name("Alice"));
         assert!(!validate_name("123Bob"));
+    }
+
+    #[test]
+    fn test_contact_from_line_ok() {
+        let line = "Alice,12345,alice@email.com";
+        let contact = Contact::from_line(line).unwrap();
+        assert_eq!(contact.name, "Alice");
+        assert_eq!(contact.phone, "12345");
+        assert_eq!(contact.email, "alice@email.com");
     }
 
     #[test]
