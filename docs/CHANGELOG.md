@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file.
 
 
+## [0.3.0] - 2025-08-30
+### Added
+- Persist `Store::file`.
+- Implemented `MemStore` and `FileStore` with traits.
+- Added custom errors (`enum AppError`) and map I/O/parse errors to `AppError`.
+- Added Generic helper to standardize input loop.
+- Introduced Github Actions.
+
+### Changed
+- Fixed validation from Regex.
+
+---
+
 ## [0.2.0] - 2025-08-22
 ### Added
 - Split project into modules: `cli`, `domain`, `validation`, and `store::mem`.
