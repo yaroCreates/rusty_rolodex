@@ -1,4 +1,4 @@
-use std::{env, fs};
+use std::{env};
 use std::io::{self, Write};
 
 use crate::domain::Contact;
@@ -16,7 +16,7 @@ pub fn run_cli() -> Result<(), AppError> {
         }
         _ => {
             println!("Using FileStore");
-            Box::new(FileStore::new("contacts.txt"))
+            Box::new(FileStore::new("contacts.json"))
         }
     };
 

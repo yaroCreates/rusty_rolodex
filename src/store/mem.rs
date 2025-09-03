@@ -1,4 +1,4 @@
-use std::{fs, io::{self, Write}};
+use std::{fs, io::{self, Write}, path::Path};
 
 use crate::domain::Contact;
 
@@ -24,6 +24,8 @@ impl Contact {
         }
     }
 }
+
+const FILE_PATH: &str = "contacts.json";
 
 pub fn retry<F, T>(prompt: &str, f: F) -> T
 where
@@ -68,6 +70,12 @@ impl std::fmt::Display for AppError {
     }
 }
 
+impl From<std::io::Error> for AppError {
+    fn from(err: std::io::Error) -> Self {
+        AppError::Io(err)
+    }
+}
+
 pub trait ContactStore { 
     fn load(&self) -> Result<Vec<Contact>, AppError>;
     fn save(&self, contacts: &Vec<Contact>) -> Result<(), AppError>;
@@ -87,26 +95,22 @@ impl FileStore {
 
 impl ContactStore for FileStore {
     fn load(&self) -> Result<Vec<Contact>, AppError> {
-        let data = match fs::read_to_string(&self.path) {
-            Ok(d) => d,
-            Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
-            Err(e) => return Err(AppError::Io(e)),
+        let path = Path::new(FILE_PATH);
+        if path.exists() {
+            let data = fs::read_to_string(path)?;
 
-        };
-
-        let mut contacts = Vec::new();
-        for line in data.lines() {
-            match Contact::from_line(line) {
-                Ok(c) => contacts.push(c),
-                Err(e) => eprintln!("Skipping line: {:?}", e),
-            }
+            let contacts:Vec<Contact> = serde_json::from_str(&data)
+                .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
+            Ok(contacts)
+        } else {
+            Ok(Vec::new())
         }
-        Ok(contacts)
     }
 
     fn save(&self, contacts: &Vec<Contact>) -> Result<(), AppError>{
-        let data = contacts.iter().map(|c| c.to_line()).collect::<Vec<_>>().join("\n");
-        fs::write(&self.path, data).expect("Failed to save contacts");
+        let data = serde_json::to_string_pretty(contacts)
+            .map_err(|e| AppError::Parse(format!("Saving error...: {}", e)))?;
+        fs::write(FILE_PATH, data)?;
         Ok(())
     }
 }
