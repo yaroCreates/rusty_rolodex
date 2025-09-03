@@ -10,19 +10,6 @@ impl Contact {
             email: email.to_string()
          }
     }
-
-    pub fn to_line(&self) -> String {
-        format!("{},{},{}", self.name, self.phone, self.email)
-    }
-
-    pub fn from_line(line: &str) -> Result<Self, AppError> {
-        let parts: Vec<&str> = line.split(',').collect();
-        if parts.len() == 3 {
-            Ok(Self::new(parts[0].trim(), parts[1].trim(), parts[2].trim()))
-        } else {
-            Err(AppError::Parse(format!("Invalid contact line: {}", line)))
-        }
-    }
 }
 
 const FILE_PATH: &str = "contacts.json";
