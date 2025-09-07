@@ -6,8 +6,9 @@ mod store {
     pub mod mem;
 }
 
-use crate::cli::run_cli;
+use crate::cli::{run_cli, run_command_cli};
 
 fn main() {
-    let _ = run_cli();
+    // let _ = run_cli();
+    let _ = run_command_cli();
 }
