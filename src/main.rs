@@ -8,7 +8,7 @@ mod store {
 
 use crate::cli::{run_cli, run_command_cli};
 
-fn main() {
+pub fn main() {
     // let _ = run_cli();
     let _ = run_command_cli();
 }
