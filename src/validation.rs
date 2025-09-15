@@ -4,7 +4,7 @@ pub fn validate_name(name: &str) -> bool {
     !name.trim().is_empty() && name.chars().all(|c| c.is_alphabetic() || c.is_whitespace())
 }
 
-pub fn validate_phone(phone: &str) -> bool {
+pub fn validate_phone_number(phone: &str) -> bool {
     let re = Regex::new(r"^\d{10,}$").unwrap();
     re.is_match(phone)
 }
@@ -26,9 +26,9 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_phone() {
-        assert!(validate_phone("08123456789"));
-        assert!(!validate_phone("1234"));
+    fn test_validate_phone_number() {
+        assert!(validate_phone_number("08123456789"));
+        assert!(!validate_phone_number("1234"));
     }
 
     #[test]

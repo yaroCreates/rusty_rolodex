@@ -4,7 +4,7 @@ use std::io::{self, Write};
 
 use crate::domain::Contact;
 use crate::store::mem::{AppError, ContactStore, FileStore, MemStore, retry};
-use crate::validation::{validate_email, validate_name, validate_phone};
+use crate::validation::{validate_email, validate_name, validate_phone_number};
 
 #[derive(Parser)]
 #[command(
@@ -152,7 +152,7 @@ fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Resul
     });
 
     let phone: String = retry("Enter phone: ", |s| {
-        if validate_phone(&s) {
+        if validate_phone_number(&s) {
             Ok(s.to_string())
         } else {
             Err(AppError::Parse(
