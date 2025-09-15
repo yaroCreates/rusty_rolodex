@@ -17,9 +17,6 @@ jobs:
     - name: Setup Rust toolchain
       uses: dtolnay/rust-toolchain@stable # Or rust-lang/setup-rust@v1 if preferred
 
-    - name: Cache Cargo dependencies
-      uses: Swatinem/rust-cache@v2
-
     - name: Build
       run: cargo build --verbose
 
