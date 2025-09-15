@@ -1,6 +1,8 @@
+#![allow(dead_code)]
+
 use std::{
     fs,
-    io::{self, Write},
+    // io::{self, Write},
     path::Path,
 };
 
@@ -18,31 +20,31 @@ impl Contact {
 
 const FILE_PATH: &str = "contacts.json";
 
-pub fn retry<F, T>(prompt: &str, f: F) -> T
-where
-    F: Fn(&str) -> Result<T, AppError>,
-{
-    loop {
-        let mut input = String::new();
-        print!("{}", prompt);
-        if let Err(e) = io::stdout().flush() {
-            eprintln!("Error flushing stdout: {:?}", e);
-        }
+// pub fn retry<F, T>(prompt: &str, f: F) -> T
+// where
+//     F: Fn(&str) -> Result<T, AppError>,
+// {
+//     loop {
+//         let mut input = String::new();
+//         print!("{}", prompt);
+//         if let Err(e) = io::stdout().flush() {
+//             eprintln!("Error flushing stdout: {:?}", e);
+//         }
 
-        if let Err(e) = io::stdin().read_line(&mut input) {
-            eprintln!("Error reading input: {:?}", e);
-            continue;
-        }
+//         if let Err(e) = io::stdin().read_line(&mut input) {
+//             eprintln!("Error reading input: {:?}", e);
+//             continue;
+//         }
 
-        match f(input.trim()) {
-            Ok(value) => return value,
-            Err(e) => {
-                eprintln!("⚠️ {}", e);
-                continue;
-            }
-        }
-    }
-}
+//         match f(input.trim()) {
+//             Ok(value) => return value,
+//             Err(e) => {
+//                 eprintln!("⚠️ {}", e);
+//                 continue;
+//             }
+//         }
+//     }
+// }
 
 #[derive(Debug)]
 pub enum AppError {
@@ -67,7 +69,7 @@ impl From<std::io::Error> for AppError {
 
 pub trait ContactStore {
     fn load(&self) -> Result<Vec<Contact>, AppError>;
-    fn save(&self, contacts: &Vec<Contact>) -> Result<(), AppError>;
+    fn save(&self, contacts: &[Contact]) -> Result<(), AppError>;
 }
 
 //File-based storage
@@ -98,7 +100,7 @@ impl ContactStore for FileStore {
         }
     }
 
-    fn save(&self, contacts: &Vec<Contact>) -> Result<(), AppError> {
+    fn save(&self, contacts: &[Contact]) -> Result<(), AppError> {
         let data = serde_json::to_string_pretty(contacts)
             .map_err(|e| AppError::Parse(format!("Saving error...: {}", e)))?;
         fs::write(FILE_PATH, data)?;
@@ -125,8 +127,8 @@ impl ContactStore for MemStore {
         Ok(self.contacts.borrow().clone())
     }
 
-    fn save(&self, contacts: &Vec<Contact>) -> Result<(), AppError> {
-        *self.contacts.borrow_mut() = contacts.clone();
+    fn save(&self, contacts: &[Contact]) -> Result<(), AppError> {
+        *self.contacts.borrow_mut() = contacts.to_vec();
         Ok(())
     }
 }

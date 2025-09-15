@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use regex::Regex;
 
 pub fn validate_name(name: &str) -> bool {
