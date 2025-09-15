@@ -1,4 +1,3 @@
-
 mod cli;
 mod domain;
 mod validation;

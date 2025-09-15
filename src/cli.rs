@@ -1,13 +1,18 @@
 use clap::{Parser, Subcommand};
-use std::{env};
+use std::env;
 use std::io::{self, Write};
 
 use crate::domain::Contact;
-use crate::store::mem::{retry, AppError, ContactStore, FileStore, MemStore};
+use crate::store::mem::{AppError, ContactStore, FileStore, MemStore, retry};
 use crate::validation::{validate_email, validate_name, validate_phone};
 
 #[derive(Parser)]
-#[command(author, name = "rolodex", version = "1.0", about = "Contact CLI manager")]
+#[command(
+    author,
+    name = "rolodex",
+    version = "1.0",
+    about = "Contact CLI manager"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -27,7 +32,7 @@ enum Commands {
     /// List contacts (optionally filter/sort)
     List {
         #[arg(long)]
-        sort: Option<String>,   // "name" or "email"
+        sort: Option<String>, // "name" or "email"
     },
     /// Delete a contact by name
     Delete {
@@ -37,14 +42,16 @@ enum Commands {
 }
 
 fn get_store() -> Box<dyn ContactStore> {
-    match env::var("STORE_TYPE").unwrap_or("file".to_string()).as_str() {
+    match env::var("STORE_TYPE")
+        .unwrap_or("file".to_string())
+        .as_str()
+    {
         "mem" => Box::new(MemStore::new()),
         _ => Box::new(FileStore::new("contacts.json")),
     }
 }
 
 pub fn run_cli() -> Result<(), AppError> {
-
     let store_type = env::var("STORE_TYPE").unwrap_or_else(|_| "file".to_string());
 
     let store: Box<dyn ContactStore> = match store_type.as_str() {
@@ -133,8 +140,7 @@ pub fn run_command_cli() -> Result<(), AppError> {
     Ok(())
 }
 
-
-fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Result<(), AppError>{
+fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Result<(), AppError> {
     println!("\n--- Add Contact ---");
 
     let name: String = retry("Enter name: ", |s| {
@@ -145,12 +151,13 @@ fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Resul
         }
     });
 
-
     let phone: String = retry("Enter phone: ", |s| {
         if validate_phone(&s) {
             Ok(s.to_string())
         } else {
-            Err(AppError::Parse("Phone must contain only digits and be more than 10 digits".into()))
+            Err(AppError::Parse(
+                "Phone must contain only digits and be more than 10 digits".into(),
+            ))
         }
     });
 
@@ -171,7 +178,6 @@ fn add_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Resul
 fn view_contacts(store: &Vec<Contact>) {
     if store.is_empty() {
         println!("No contact available")
-
     } else {
         for (i, c) in store.iter().enumerate() {
             println!(
@@ -182,9 +188,7 @@ fn view_contacts(store: &Vec<Contact>) {
                 c.email
             );
         }
-
     }
-
 }
 
 fn delete_contact(storage: &dyn ContactStore, contacts: &mut Vec<Contact>) -> Result<(), AppError> {

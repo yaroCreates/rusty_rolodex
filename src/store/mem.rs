@@ -1,14 +1,18 @@
-use std::{fs, io::{self, Write}, path::Path};
+use std::{
+    fs,
+    io::{self, Write},
+    path::Path,
+};
 
 use crate::domain::Contact;
 
 impl Contact {
     pub fn new(name: &str, phone: &str, email: &str) -> Self {
-        Self { 
+        Self {
             name: name.to_string(),
             phone: phone.to_string(),
-            email: email.to_string()
-         }
+            email: email.to_string(),
+        }
     }
 }
 
@@ -40,7 +44,6 @@ where
     }
 }
 
-
 #[derive(Debug)]
 pub enum AppError {
     Io(std::io::Error),
@@ -50,9 +53,8 @@ pub enum AppError {
 impl std::fmt::Display for AppError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            AppError::Io(err) =>write!(f, "I/O error: {}", err),
+            AppError::Io(err) => write!(f, "I/O error: {}", err),
             AppError::Parse(msg) => write!(f, "Parse error: {}", msg),
-
         }
     }
 }
@@ -63,7 +65,7 @@ impl From<std::io::Error> for AppError {
     }
 }
 
-pub trait ContactStore { 
+pub trait ContactStore {
     fn load(&self) -> Result<Vec<Contact>, AppError>;
     fn save(&self, contacts: &Vec<Contact>) -> Result<(), AppError>;
 }
@@ -76,7 +78,9 @@ pub struct FileStore {
 
 impl FileStore {
     pub fn new(path: &str) -> Self {
-        Self { path: path.to_string() }
+        Self {
+            path: path.to_string(),
+        }
     }
 }
 
@@ -86,7 +90,7 @@ impl ContactStore for FileStore {
         if path.exists() {
             let data = fs::read_to_string(path)?;
 
-            let contacts:Vec<Contact> = serde_json::from_str(&data)
+            let contacts: Vec<Contact> = serde_json::from_str(&data)
                 .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
             Ok(contacts)
         } else {
@@ -94,7 +98,7 @@ impl ContactStore for FileStore {
         }
     }
 
-    fn save(&self, contacts: &Vec<Contact>) -> Result<(), AppError>{
+    fn save(&self, contacts: &Vec<Contact>) -> Result<(), AppError> {
         let data = serde_json::to_string_pretty(contacts)
             .map_err(|e| AppError::Parse(format!("Saving error...: {}", e)))?;
         fs::write(FILE_PATH, data)?;

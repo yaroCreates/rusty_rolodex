@@ -2,10 +2,7 @@ use std::process::Command;
 
 fn main() {
     let status = Command::new("cargo")
-        .args(&[
-            "run", "--", "delete",
-            "--name", "Alice",
-        ])
+        .args(&["run", "--", "delete", "--name", "Alice"])
         .status()
         .expect("failed to run rolodex delete");
 
