@@ -50,6 +50,7 @@ const FILE_PATH: &str = "contacts.json";
 pub enum AppError {
     Io(std::io::Error),
     Parse(String),
+    Validation(String),
 }
 
 impl std::fmt::Display for AppError {
@@ -57,6 +58,7 @@ impl std::fmt::Display for AppError {
         match self {
             AppError::Io(err) => write!(f, "I/O error: {}", err),
             AppError::Parse(msg) => write!(f, "Parse error: {}", msg),
+            AppError::Validation(msg) => write!(f, "Validation failed: {}", msg),
         }
     }
 }

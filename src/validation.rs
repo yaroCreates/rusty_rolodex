@@ -2,6 +2,30 @@
 
 use regex::Regex;
 
+use crate::domain::Contact;
+
+pub enum ValidationResponse {}
+
+impl ValidationResponse {
+    pub fn check_name() -> String {
+        "Invalid name! Please check the name and try and again".to_string()
+    }
+
+    pub fn check_email() -> String {
+        "Invalid email! Please check the email and try and again".to_string()
+    }
+
+    pub fn check_phone_number() -> String {
+        "Invalid phone number! Please check the number and try and again".to_string()
+    }
+}
+
+pub fn check_contact_exist(contact: &Contact, contact_list: &[Contact]) -> bool {
+    contact_list
+        .iter()
+        .any(|c|c.name == contact.name)
+}
+
 pub fn validate_name(name: &str) -> bool {
     !name.trim().is_empty() && name.chars().all(|c| c.is_alphabetic() || c.is_whitespace())
 }
