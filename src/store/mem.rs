@@ -9,42 +9,25 @@ use std::{
 use crate::domain::Contact;
 
 impl Contact {
-    pub fn new(name: &str, phone: &str, email: &str) -> Self {
+    pub fn new(name: &str, phone: &str, email: &str, tags: Vec<String>) -> Self {
         Self {
             name: name.to_string(),
             phone: phone.to_string(),
             email: email.to_string(),
+            tags
         }
+    }
+
+    pub fn has_tag(&self, tag: &str) -> bool {
+        self.tags.iter().any(|t| t == tag)
+    }
+
+    pub fn has_domain(&self, domain: &str) -> bool {
+        self.email.ends_with(&format!("@{}", domain))
     }
 }
 
 const FILE_PATH: &str = "contacts.json";
-
-// pub fn retry<F, T>(prompt: &str, f: F) -> T
-// where
-//     F: Fn(&str) -> Result<T, AppError>,
-// {
-//     loop {
-//         let mut input = String::new();
-//         print!("{}", prompt);
-//         if let Err(e) = io::stdout().flush() {
-//             eprintln!("Error flushing stdout: {:?}", e);
-//         }
-
-//         if let Err(e) = io::stdin().read_line(&mut input) {
-//             eprintln!("Error reading input: {:?}", e);
-//             continue;
-//         }
-
-//         match f(input.trim()) {
-//             Ok(value) => return value,
-//             Err(e) => {
-//                 eprintln!("⚠️ {}", e);
-//                 continue;
-//             }
-//         }
-//     }
-// }
 
 #[derive(Debug)]
 pub enum AppError {

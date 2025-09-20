@@ -8,5 +8,8 @@ mod store {
 use crate::cli::run_command_cli;
 
 pub fn main() {
-    let _ = run_command_cli();
+    if let Err(err) = run_command_cli() {
+        eprintln!("Error: {}", err);
+        std::process::exit(1);
+    }
 }

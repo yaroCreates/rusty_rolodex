@@ -1,9 +1,11 @@
 use clap::{Parser, Subcommand};
 use std::env;
 
-use crate::domain::Contact;
+use crate::domain::{Contact, Contacts};
 use crate::store::mem::{AppError, ContactStore, FileStore, MemStore};
-use crate::validation::{check_contact_exist, validate_email, validate_name, validate_phone_number, ValidationResponse};
+use crate::validation::{
+    ValidationResponse, check_contact_exist, validate_email, validate_name, validate_phone_number,
+};
 
 #[derive(Parser)]
 #[command(
@@ -27,11 +29,17 @@ enum Commands {
         phone: String,
         #[arg(long)]
         email: String,
+        #[arg(long, value_delimiter = ',')]
+        tags: Vec<String>,
     },
     /// List contacts (optionally filter/sort)
     List {
         #[arg(long)]
         sort: Option<String>, // "name" or "email"
+        #[arg(long)]
+        tag: Option<String>,
+        #[arg(long)]
+        domain: Option<String>,
     },
     /// Delete a contact by name
     Delete {
@@ -55,8 +63,12 @@ pub fn run_command_cli() -> Result<(), AppError> {
     let store = get_store();
 
     match cli.command {
-        Commands::Add { name, phone, email } => {
-
+        Commands::Add {
+            name,
+            phone,
+            email,
+            tags,
+        } => {
             if !validate_name(&name) {
                 return Err(AppError::Validation(ValidationResponse::check_name()));
             }
@@ -66,34 +78,46 @@ pub fn run_command_cli() -> Result<(), AppError> {
             }
 
             if !validate_phone_number(&phone) {
-                return Err(AppError::Validation(ValidationResponse::check_phone_number()));
+                return Err(AppError::Validation(
+                    ValidationResponse::check_phone_number(),
+                ));
             }
 
             let mut contacts = store.load()?;
-            let new_contact = Contact::new(&name, &phone, &email);
+            let new_contact = Contact::new(&name, &phone, &email, tags.clone());
 
             if check_contact_exist(&new_contact, &contacts) {
-                return Err(AppError::Validation(format!("Contact with name already exists")));
+                return Err(AppError::Validation(
+                    "Contact with name already exists".to_string(),
+                ));
             }
-            contacts.push(Contact::new(&name, &phone, &email));
+            contacts.push(Contact::new(&name, &phone, &email, tags));
             store.save(&contacts)?;
             println!("✅ Added contact: {} ({})", name, email);
         }
-        Commands::List { sort } => {
-            let mut contacts = store.load()?;
+        Commands::List { sort, tag, domain } => {
+            let contacts_vec = store.load()?;
+            let contacts = Contacts::new(contacts_vec);
+
+            //Chain filters using iterator
+            let mut filtered_contacts: Vec<&Contact> = contacts
+                .iter()
+                .filter(|c| tag.as_ref().map_or(true,|t| c.has_tag(t)))
+                .filter(|c| domain.as_ref().map_or(true,|d| c.has_domain(d)))
+                .collect();
 
             if let Some(sort_key) = sort {
                 match sort_key.as_str() {
-                    "name" => contacts.sort_by(|a, b| a.name.cmp(&b.name)),
-                    "email" => contacts.sort_by(|a, b| a.email.cmp(&b.email)),
+                    "name" => filtered_contacts.sort_by(|a, b| a.name.cmp(&b.name)),
+                    "email" => filtered_contacts.sort_by(|a, b| a.email.cmp(&b.email)),
                     _ => println!("⚠️ Unsupported sort key: {}", sort_key),
                 }
             }
 
-            if contacts.is_empty() {
+            if filtered_contacts.is_empty() {
                 println!("No contacts found.");
             } else {
-                for c in contacts {
+                for c in filtered_contacts {
                     println!("📇 {} | {} | {}", c.name, c.phone, c.email);
                 }
             }
