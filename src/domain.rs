@@ -19,9 +19,23 @@ impl Contacts {
         Self {items}
     }
 
-    pub fn iter(&'_ self) -> ContactsIter<'_> {
-        ContactsIter {inner: self.items.iter()}
+    // pub fn iter(&'_ self) -> ContactsIter<'_> {
+    //     ContactsIter {inner: self.items.iter()}
+    // }
+
+    // Returns a read-only slice of all contacts.
+    pub fn as_slice(&self) ->&[Contact] {
+        &self.items
     }
+
+    // Returns a filtered view as a slice (no clones).
+    // pub fn filter_by_tag<'a>(&'a self, tag: &str) -> Vec<&'a Contact> {
+    //     self.items.iter().filter(|c| c.has_tag(tag)).collect()
+    // }
+
+    // pub fn filter_by_domain<'a>(&'a self, domain: &str) -> Vec<&'a Contact> {
+    //     self.items.iter().filter(|c| c.has_domain(domain)).collect()
+    // }
 }
 
 pub struct ContactsIter<'a> {

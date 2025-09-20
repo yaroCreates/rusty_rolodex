@@ -101,9 +101,10 @@ pub fn run_command_cli() -> Result<(), AppError> {
 
             //Chain filters using iterator
             let mut filtered_contacts: Vec<&Contact> = contacts
+                .as_slice()
                 .iter()
-                .filter(|c| tag.as_ref().map_or(true,|t| c.has_tag(t)))
-                .filter(|c| domain.as_ref().map_or(true,|d| c.has_domain(d)))
+                .filter(|c| tag.as_ref().map_or(true, |t| c.has_tag(t)))
+                .filter(|c| domain.as_ref().map_or(true, |d| c.has_domain(d)))
                 .collect();
 
             if let Some(sort_key) = sort {
@@ -137,4 +138,67 @@ pub fn run_command_cli() -> Result<(), AppError> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_contacts() -> Contacts {
+        Contacts::new(vec![
+            Contact::new("Alice", "123", "alice@work.com", vec!["work".into()]),
+            Contact::new("Bob", "456", "bob@personal.com", vec!["personal".into()]),
+            Contact::new("Carol", "789", "carol@work.com", vec!["work".into()]),
+        ])
+    }
+
+    #[test]
+    fn test_filter_by_tag() {
+        let contacts = sample_contacts();
+        let work: Vec<_> = contacts
+            .as_slice()
+            .into_iter()
+            .filter(|c| c.has_tag("work"))
+            .collect();
+        assert_eq!(work.len(), 2);
+    }
+
+    #[test]
+    fn test_filter_by_domain() {
+        let contacts = sample_contacts();
+        let work_mails: Vec<_> = contacts
+            .as_slice()
+            .into_iter()
+            .filter(|c| c.has_domain("work.com"))
+            .collect();
+        assert_eq!(work_mails.len(), 2);
+    }
+
+    #[test]
+    fn test_chainable_filters() {
+        let contacts = sample_contacts();
+        let results: Vec<_> = contacts
+            .as_slice()
+            .into_iter()
+            .filter(|c| c.has_tag("work"))
+            .filter(|c| c.has_domain("work.com"))
+            .take(1)
+            .collect();
+
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].name, "Alice");
+    }
+}
+
+//Borrow check test
+#[test]
+fn test_as_slice() {
+    let contacts = Contacts::new(vec![
+        Contact::new("Alice", "123", "alice@work.com", vec!["work".into()]),
+        Contact::new("Bob", "456", "bob@home.com", vec![]),
+    ]);
+
+    let slice = contacts.as_slice();
+    assert_eq!(slice.len(), 2);
+    assert_eq!(slice[0].name, "Alice");
 }
