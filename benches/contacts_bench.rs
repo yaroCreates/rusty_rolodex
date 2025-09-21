@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -6,22 +6,24 @@ pub struct Contact {
     pub name: String,
     pub phone: String,
     pub email: String,
-    #[serde(default)] 
-    pub tags: Vec<String>
+    #[serde(default)]
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug)]
 pub struct Contacts {
-    items: Vec<Contact>
+    items: Vec<Contact>,
 }
 
 impl Contacts {
     pub fn new(items: Vec<Contact>) -> Self {
-        Self {items}
+        Self { items }
     }
 
     pub fn iter(&'_ self) -> ContactsIter<'_> {
-        ContactsIter {inner: self.items.iter()}
+        ContactsIter {
+            inner: self.items.iter(),
+        }
     }
 }
 
@@ -31,7 +33,7 @@ impl Contact {
             name: name.to_string(),
             phone: phone.to_string(),
             email: email.to_string(),
-            tags
+            tags,
         }
     }
 
@@ -56,15 +58,16 @@ impl<'a> Iterator for ContactsIter<'a> {
     }
 }
 
-
 fn sample_contacts(n: usize) -> Contacts {
     let items = (0..n)
-        .map(|i| Contact::new(
-            &format!("User{}", i),
-            &format!("000{}", i),
-            &format!("user{}@example.com", i),
-            vec!["work".into()],
-        ))
+        .map(|i| {
+            Contact::new(
+                &format!("User{}", i),
+                &format!("000{}", i),
+                &format!("user{}@example.com", i),
+                vec!["work".into()],
+            )
+        })
         .collect();
     Contacts::new(items)
 }
@@ -74,10 +77,7 @@ fn bench_filtering(c: &mut Criterion) {
 
     c.bench_function("filter_by_tag_work", |b| {
         b.iter(|| {
-            let count = contacts
-                .iter()
-                .filter(|c| c.has_tag("work"))
-                .count();
+            let count = contacts.iter().filter(|c| c.has_tag("work")).count();
             assert_eq!(count, 10_000);
         })
     });

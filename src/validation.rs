@@ -21,9 +21,7 @@ impl ValidationResponse {
 }
 
 pub fn check_contact_exist(contact: &Contact, contact_list: &[Contact]) -> bool {
-    contact_list
-        .iter()
-        .any(|c|c.name == contact.name)
+    contact_list.iter().any(|c| c.name == contact.name)
 }
 
 pub fn validate_name(name: &str) -> bool {

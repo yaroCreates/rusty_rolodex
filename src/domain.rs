@@ -5,18 +5,18 @@ pub struct Contact {
     pub name: String,
     pub phone: String,
     pub email: String,
-    #[serde(default)] 
-    pub tags: Vec<String>
+    #[serde(default)]
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug)]
 pub struct Contacts {
-    items: Vec<Contact>
+    items: Vec<Contact>,
 }
 
 impl Contacts {
     pub fn new(items: Vec<Contact>) -> Self {
-        Self {items}
+        Self { items }
     }
 
     // pub fn iter(&'_ self) -> ContactsIter<'_> {
@@ -24,7 +24,7 @@ impl Contacts {
     // }
 
     // Returns a read-only slice of all contacts.
-    pub fn as_slice(&self) ->&[Contact] {
+    pub fn as_slice(&self) -> &[Contact] {
         &self.items
     }
 

@@ -14,7 +14,7 @@ impl Contact {
             name: name.to_string(),
             phone: phone.to_string(),
             email: email.to_string(),
-            tags
+            tags,
         }
     }
 
