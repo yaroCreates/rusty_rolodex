@@ -2,36 +2,43 @@
   {
     "name": "Jane",
     "phone": "12345678900",
-    "email": "jane@gmail.com"
+    "email": "jane@gmail.com",
+    "tags": []
   },
   {
     "name": "James",
     "phone": "09877663542",
-    "email": "james@email.com"
+    "email": "james@email.com",
+    "tags": []
   },
   {
     "name": "Alice",
     "phone": "12345",
-    "email": "alice@example.com"
+    "email": "alice@example.com",
+    "tags": []
   },
   {
     "name": "Alica",
     "phone": "12345",
-    "email": "alice@example.com"
+    "email": "alice@example.com",
+    "tags": []
   },
   {
     "name": "Alicey",
     "phone": "9029020922222",
-    "email": "james@gmail.com"
+    "email": "james@gmail.com",
+    "tags": []
   },
   {
     "name": "Alicey",
     "phone": "9029020922222",
-    "email": "james@gmail.com"
+    "email": "james@gmail.com",
+    "tags": []
   },
   {
     "name": "Alicey",
     "phone": "9029020922222",
-    "email": "james@gmail.com"
+    "email": "james@gmail.com",
+    "tags": []
   }
 ]
