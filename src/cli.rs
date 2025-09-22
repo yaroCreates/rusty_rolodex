@@ -103,8 +103,8 @@ pub fn run_command_cli() -> Result<(), AppError> {
             let mut filtered_contacts: Vec<&Contact> = contacts
                 .as_slice()
                 .iter()
-                .filter(|c| tag.as_ref().map_or(true, |t| c.has_tag(t)))
-                .filter(|c| domain.as_ref().map_or(true, |d| c.has_domain(d)))
+                .filter(|c| tag.as_ref().is_none_or(|t| c.has_tag(t)))
+                .filter(|c| domain.as_ref().is_none_or(|d| c.has_domain(d)))
                 .collect();
 
             if let Some(sort_key) = sort {

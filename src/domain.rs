@@ -38,14 +38,14 @@ impl Contacts {
     // }
 }
 
-pub struct ContactsIter<'a> {
-    inner: std::slice::Iter<'a, Contact>,
-}
+// pub struct ContactsIter<'a> {
+//     inner: std::slice::Iter<'a, Contact>,
+// }
 
-impl<'a> Iterator for ContactsIter<'a> {
-    type Item = &'a Contact;
+// impl<'a> Iterator for ContactsIter<'a> {
+//     type Item = &'a Contact;
 
-    fn next(&mut self) -> Option<Self::Item> {
-        self.inner.next()
-    }
-}
+//     fn next(&mut self) -> Option<Self::Item> {
+//         self.inner.next()
+//     }
+// }
