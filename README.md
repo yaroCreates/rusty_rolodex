@@ -24,7 +24,7 @@ Supports adding, viewing, deleting contacts, saving to a JSON file, input valida
 2. Clone this repository:
 
    ```bash
-   git clone https://github.com/your-username/contact-manager-cli.git
+   git clone https://github.com/yaroCreates/rusty_rolodex.git
    cd contact-manager-cli
    ```
 3. Build and run:
