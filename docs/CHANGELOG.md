@@ -1,6 +1,16 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-09-21
+### Added
+
+- Implement iterator over contacts: filters by tag/domain.
+- chainable filters in tests (iter().filter(...).take(...)).
+- Add read-only views returning &Contact slices (no clones), with compile‑time borrow checks pass; zero-copy listings.
+- Add black‑box tests in tests/cli.rs (spawn binary, assert output).
+- Introduce micro‑benchmarking using criterion.
+
+---
 
 ## [0.3.0] - 2025-08-30
 ### Added
@@ -43,3 +53,5 @@ All notable changes to this project will be documented in this file.
   - Exit program
 - Basic input validation for name, phone, and email.
 - In-memory contact store.
+
+
