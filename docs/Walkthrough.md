@@ -51,3 +51,45 @@ Resetting the app
 ![alt text](image-11.png)
 
 ---
+# Week 4
+
+## Correction from week 3
+- ✅️ Pipeline fix
+- ✅️ Check for duplicate name before adding contacts
+- ❌️ Deleting contact with same name (Going to be concluded)
+- ✅️ Updated Phone number validation function name
+
+## Tasks
+Iterator over contact - filter with tags and domain.
+
+In achieving filters by tags or domain, the Contact Struct had to be first updated to accept tags upon creation. In order to support backward compatiblity, the tag field is defined optional so as to support contacts that were created before the feature.
+
+```rust
+pub struct Contact {
+    pub name: String,
+    pub phone: String,
+    pub email: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
+}
+```
+
+Running the command to return the contact...
+
+```bash
+cargo run -- list
+```
+![alt text](media/image-12.png)
+
+Running filter by domain
+```bash
+cargo run -- list --domain "example.com"
+```
+![alt text](image-12.png)
+
+## Integration test (Black-box testing)
+The integration test contains a full run through of the entire app, creating two scenarios for:
+- Adding and Listing
+- Adding, Deleting and Listing
+
+
