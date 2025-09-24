@@ -45,6 +45,8 @@ enum Commands {
     Delete {
         #[arg(long)]
         name: String,
+        #[arg(long)]
+        phone: Option<String>,
     },
 }
 
@@ -88,7 +90,7 @@ pub fn run_command_cli() -> Result<(), AppError> {
 
             if check_contact_exist(&new_contact, &contacts) {
                 return Err(AppError::Validation(
-                    "Contact with name already exists".to_string(),
+                    "Contact with info already exists".to_string(),
                 ));
             }
             contacts.push(Contact::new(&name, &phone, &email, tags));
@@ -123,16 +125,41 @@ pub fn run_command_cli() -> Result<(), AppError> {
                 }
             }
         }
-        Commands::Delete { name } => {
-            let mut contacts = store.load()?;
-            let len_before = contacts.len();
-            contacts.retain(|c| c.name != name);
+        Commands::Delete { name, phone } => {
+            //Checking for duplicates
+            let mut check_duplicates = store.load()?;
+            check_duplicates.retain(|c| c.name == name);
 
-            if contacts.len() < len_before {
-                store.save(&contacts)?;
-                println!("🗑️ Removed contact: {}", name);
+            let phone = phone.unwrap_or_default();
+
+            if check_duplicates.len() > 1 {
+                if phone.is_empty() {
+                    return Err(AppError::Parse(String::from(
+                        "There are more than one contact with the name. Please provide the phone number to continue the action",
+                    )));
+                } else {
+                    let mut contacts = store.load()?;
+                    let len_before = contacts.len();
+                    contacts.retain(|c| c.phone != phone);
+
+                    if contacts.len() < len_before {
+                        store.save(&contacts)?;
+                        println!("🗑️ Removed contact: {} - {}", name, phone);
+                    } else {
+                        println!("⚠️ No contact found with name '{}'", name);
+                    }
+                }
             } else {
-                println!("⚠️ No contact found with name '{}'", name);
+                let mut contacts = store.load()?;
+                let len_before = contacts.len();
+                contacts.retain(|c| c.name != name);
+
+                if contacts.len() < len_before {
+                    store.save(&contacts)?;
+                    println!("🗑️ Removed contact: {}", name);
+                } else {
+                    println!("⚠️ No contact found with name '{}'", name);
+                }
             }
         }
     }
