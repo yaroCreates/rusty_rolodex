@@ -56,7 +56,7 @@ fn get_store() -> Box<dyn ContactStore> {
         .as_str()
     {
         "mem" => Box::new(MemStore::new()),
-        _ => Box::new(FileStore::new("contacts.json")),
+        _ => Box::new(FileStore),
     }
 }
 

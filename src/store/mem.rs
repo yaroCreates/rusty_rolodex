@@ -18,6 +18,17 @@ impl Contact {
         }
     }
 
+    // for migrating from txt -> JSON
+    pub fn from_line(line: &str) -> Result<Self, AppError> {
+        let parts: Vec<&str> = line.split(",").collect();
+        if parts.len() != 3 {
+            return Err(AppError::Parse(format!("Invalid line: {}", line)));
+        }
+        Ok(Self::new(parts[0], parts[1], parts[2], vec![]))
+        
+    }
+
+
     pub fn has_tag(&self, tag: &str) -> bool {
         self.tags.iter().any(|t| t == tag)
     }
@@ -27,7 +38,8 @@ impl Contact {
     }
 }
 
-const FILE_PATH: &str = "contacts.json";
+const JSON_FILE_PATH: &str = "contacts.json";
+const TXT_FILE_PATH: &str = "contacts.txt";
 
 #[derive(Debug)]
 pub enum AppError {
@@ -59,27 +71,43 @@ pub trait ContactStore {
 
 //File-based storage
 
-pub struct FileStore {
-    path: String,
-}
+pub struct FileStore;
 
-impl FileStore {
-    pub fn new(path: &str) -> Self {
-        Self {
-            path: path.to_string(),
-        }
-    }
-}
+// impl FileStore {
+//     pub fn new(path: &str) -> Self {
+//         Self {
+//             path: path.to_string(),
+//         }
+//     }
+// }
 
 impl ContactStore for FileStore {
     fn load(&self) -> Result<Vec<Contact>, AppError> {
-        let path = Path::new(FILE_PATH);
-        if path.exists() {
-            let data = fs::read_to_string(path)?;
+        let path_json = Path::new(JSON_FILE_PATH);
+        let path_txt = Path::new(TXT_FILE_PATH);
+
+
+        if path_json.exists() {
+            let data = fs::read_to_string(path_json)?;
 
             let contacts: Vec<Contact> = serde_json::from_str(&data)
                 .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
             Ok(contacts)
+        } else if path_txt.exists() {
+            //txt -> JSON
+            let data = fs::read_to_string(path_txt)?;
+            let mut contacts = Vec::new();
+
+            for line in data.lines() {
+                match Contact::from_line(line) {
+                    Ok(c) => contacts.push(c),
+                    Err(e) => eprintln!("⚠️ Skipping bad line: {}", e),
+                }
+            }
+            self.save(&contacts)?;
+            println!("Migration contacts.txt -> contact.json successful!");
+            Ok(contacts)
+
         } else {
             Ok(Vec::new())
         }
@@ -88,7 +116,7 @@ impl ContactStore for FileStore {
     fn save(&self, contacts: &[Contact]) -> Result<(), AppError> {
         let data = serde_json::to_string_pretty(contacts)
             .map_err(|e| AppError::Parse(format!("Saving error...: {}", e)))?;
-        fs::write(FILE_PATH, data)?;
+        fs::write(JSON_FILE_PATH, data)?;
         Ok(())
     }
 }
