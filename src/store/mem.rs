@@ -25,9 +25,7 @@ impl Contact {
             return Err(AppError::Parse(format!("Invalid line: {}", line)));
         }
         Ok(Self::new(parts[0], parts[1], parts[2], vec![]))
-        
     }
-
 
     pub fn has_tag(&self, tag: &str) -> bool {
         self.tags.iter().any(|t| t == tag)
@@ -86,7 +84,6 @@ impl ContactStore for FileStore {
         let path_json = Path::new(JSON_FILE_PATH);
         let path_txt = Path::new(TXT_FILE_PATH);
 
-
         if path_json.exists() {
             let data = fs::read_to_string(path_json)?;
 
@@ -107,7 +104,6 @@ impl ContactStore for FileStore {
             self.save(&contacts)?;
             println!("Migration contacts.txt -> contact.json successful!");
             Ok(contacts)
-
         } else {
             Ok(Vec::new())
         }
