@@ -20,8 +20,11 @@ jobs:
     - name: Build
       run: cargo build --verbose
 
-    - name: Cargo-fmt install
+    - name: Add Cargo-fmt
       run: rustup component add rustfmt
+
+    - name: Add Cargo-clippy
+      run: rustup component add clippy
 
     - name: Check formatting
       run: cargo fmt --check
