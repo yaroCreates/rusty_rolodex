@@ -6,7 +6,7 @@ use std::{
     path::Path,
 };
 
-use crate::domain::Contact;
+use crate::{domain::Contact, traits::ContactStore};
 
 impl Contact {
     pub fn new(name: &str, phone: &str, email: &str, tags: Vec<String>) -> Self {
@@ -60,11 +60,6 @@ impl From<std::io::Error> for AppError {
     fn from(err: std::io::Error) -> Self {
         AppError::Io(err)
     }
-}
-
-pub trait ContactStore {
-    fn load(&self) -> Result<Vec<Contact>, AppError>;
-    fn save(&self, contacts: &[Contact]) -> Result<(), AppError>;
 }
 
 //File-based storage

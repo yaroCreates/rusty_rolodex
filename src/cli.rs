@@ -2,7 +2,8 @@ use clap::{Parser, Subcommand};
 use std::env;
 
 use crate::domain::{Contact, Contacts};
-use crate::store::mem::{AppError, ContactStore, FileStore, MemStore};
+use crate::store::mem::{AppError, FileStore, MemStore};
+use crate::traits::ContactStore;
 use crate::validation::{
     ValidationResponse, check_contact_exist, validate_email, validate_name, validate_phone_number,
 };

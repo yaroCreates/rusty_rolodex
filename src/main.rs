@@ -1,11 +1,4 @@
-mod cli;
-mod domain;
-mod validation;
-mod store {
-    pub mod mem;
-}
-
-use crate::cli::run_command_cli;
+use rusty_rolodex::cli::run_command_cli;
 
 pub fn main() {
     if let Err(err) = run_command_cli() {
