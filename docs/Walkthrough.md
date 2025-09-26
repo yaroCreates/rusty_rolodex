@@ -56,8 +56,10 @@ Resetting the app
 ## Correction from week 3
 - ✅️ Pipeline fix
 - ✅️ Check for duplicate name before adding contacts
-- ❌️ Deleting contact with same name (Going to be concluded)
+- ✅️ Deleting contact with same name (Going to be concluded)
 - ✅️ Updated Phone number validation function name
+- ✅️ Contact.txt -> Contact.json Migration
+- ✅️ Versioned release via Git tag
 
 ## Tasks
 Iterator over contact - filter with tags and domain.
@@ -92,4 +94,7 @@ The integration test contains a full run through of the entire app, creating two
 - Adding and Listing
 - Adding, Deleting and Listing
 
+![alt text](media/image-13.png)
 
+## Demo
+![alt text](media/week-4-demo.gif)
