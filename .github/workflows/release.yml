@@ -45,4 +45,4 @@ jobs:
           files: ./dist/rolodex
           generate_release_notes: true
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
