@@ -44,7 +44,5 @@ jobs:
         with:
           files: ./dist/rolodex
           generate_release_notes: true
-          tag_name: v0.4-week-4
-          release_name: Release v0.4-week-4
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
