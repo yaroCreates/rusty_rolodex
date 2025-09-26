@@ -118,6 +118,7 @@ pub struct MemStore {
     contacts: std::cell::RefCell<Vec<Contact>>,
 }
 
+#[allow(clippy::new_without_default)]
 impl MemStore {
     pub fn new() -> Self {
         Self {
