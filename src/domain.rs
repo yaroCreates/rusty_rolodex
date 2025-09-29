@@ -19,9 +19,11 @@ impl Contacts {
         Self { items }
     }
 
-    // pub fn iter(&'_ self) -> ContactsIter<'_> {
-    //     ContactsIter {inner: self.items.iter()}
-    // }
+    pub fn iter(&'_ self) -> ContactsIter<'_> {
+        ContactsIter {
+            inner: self.items.iter(),
+        }
+    }
 
     // Returns a read-only slice of all contacts.
     pub fn as_slice(&self) -> &[Contact] {
@@ -38,14 +40,16 @@ impl Contacts {
     // }
 }
 
-// pub struct ContactsIter<'a> {
-//     inner: std::slice::Iter<'a, Contact>,
-// }
+//Return type
 
-// impl<'a> Iterator for ContactsIter<'a> {
-//     type Item = &'a Contact;
+pub struct ContactsIter<'a> {
+    inner: std::slice::Iter<'a, Contact>,
+}
 
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.inner.next()
-//     }
-// }
+impl<'a> Iterator for ContactsIter<'a> {
+    type Item = &'a Contact;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+}

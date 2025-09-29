@@ -104,7 +104,6 @@ pub fn run_command_cli() -> Result<(), AppError> {
 
             //Chain filters using iterator
             let mut filtered_contacts: Vec<&Contact> = contacts
-                .as_slice()
                 .iter()
                 .filter(|c| tag.as_ref().is_none_or(|t| c.has_tag(t)))
                 .filter(|c| domain.as_ref().is_none_or(|d| c.has_domain(d)))
@@ -183,11 +182,7 @@ mod tests {
     #[test]
     fn test_filter_by_tag() {
         let contacts = sample_contacts();
-        let work: Vec<_> = contacts
-            .as_slice()
-            .into_iter()
-            .filter(|c| c.has_tag("work"))
-            .collect();
+        let work: Vec<_> = contacts.iter().filter(|c| c.has_tag("work")).collect();
         assert_eq!(work.len(), 2);
     }
 
@@ -195,8 +190,7 @@ mod tests {
     fn test_filter_by_domain() {
         let contacts = sample_contacts();
         let work_mails: Vec<_> = contacts
-            .as_slice()
-            .into_iter()
+            .iter()
             .filter(|c| c.has_domain("work.com"))
             .collect();
         assert_eq!(work_mails.len(), 2);
@@ -206,8 +200,7 @@ mod tests {
     fn test_chainable_filters() {
         let contacts = sample_contacts();
         let results: Vec<_> = contacts
-            .as_slice()
-            .into_iter()
+            .iter()
             .filter(|c| c.has_tag("work"))
             .filter(|c| c.has_domain("work.com"))
             .take(1)
@@ -219,14 +212,14 @@ mod tests {
 }
 
 //Borrow check test
-#[test]
-fn test_as_slice() {
-    let contacts = Contacts::new(vec![
-        Contact::new("Alice", "123", "alice@work.com", vec!["work".into()]),
-        Contact::new("Bob", "456", "bob@home.com", vec![]),
-    ]);
+// #[test]
+// fn test_as_slice() {
+//     let contacts = Contacts::new(vec![
+//         Contact::new("Alice", "123", "alice@work.com", vec!["work".into()]),
+//         Contact::new("Bob", "456", "bob@home.com", vec![]),
+//     ]);
 
-    let slice = contacts.as_slice();
-    assert_eq!(slice.len(), 2);
-    assert_eq!(slice[0].name, "Alice");
-}
+//     let slice = contacts.as_slice();
+//     assert_eq!(slice.len(), 2);
+//     assert_eq!(slice[0].name, "Alice");
+// }

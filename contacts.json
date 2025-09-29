@@ -22,5 +22,13 @@
     "phone": "9029020922222",
     "email": "james@gmail.com",
     "tags": []
+  },
+  {
+    "name": "Alice",
+    "phone": "123345534343434",
+    "email": "alice@work.com",
+    "tags": [
+      "work"
+    ]
   }
 ]
