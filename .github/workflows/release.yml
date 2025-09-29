@@ -3,11 +3,10 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions:
   contents: write
-
 
 jobs:
   build:
@@ -22,27 +21,16 @@ jobs:
         run: cargo build --release
 
       - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: rolodex
-          path: target/release/rolodex
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download built binary
-        uses: actions/download-artifact@v4
-        with:
-          name: rolodex
-          path: ./dist
+        run: |
+          cd target/release
+          tar czf ../../rusty-rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz rusty-rolodex
+          cd ../../
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./dist/rolodex
+          files: ./rusty-rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
