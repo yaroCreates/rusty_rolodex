@@ -23,7 +23,7 @@ jobs:
       - name: Upload binary artifact
         run: |
           cd target/release
-          tar czf ../../rusty-rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz rusty-rolodex
+          tar czf ../../rusty-rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz rusty_rolodex
           cd ../../
 
       - name: Create GitHub Release
@@ -33,4 +33,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
