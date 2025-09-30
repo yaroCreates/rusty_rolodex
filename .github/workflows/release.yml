@@ -25,17 +25,17 @@ jobs:
 
       - name: Package binary
         run: |
-          BIN_NAME="rusty_rolodex"
+          BIN_NAME="rolodex"
           if [ ! -f target/release/$BIN_NAME ]; then
             echo "❌ Error: Binary '$BIN_NAME' not found in target/release"
             exit 1
           fi
-          tar czf rusty-rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz -C target/release $BIN_NAME
+          tar czf rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz -C target/release $BIN_NAME
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ./rusty-rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz
+          files: ./rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
