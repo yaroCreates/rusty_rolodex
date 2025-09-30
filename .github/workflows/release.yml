@@ -19,12 +19,18 @@ jobs:
 
       - name: Build release binary
         run: cargo build --release
+      
+      - name: List release directory
+        run: ls -l target/release
 
-      - name: Upload binary artifact
+      - name: Package binary
         run: |
-          cd target/release
-          tar czf ../../rusty-rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz rusty_rolodex
-          cd ../../
+          BIN_NAME="rusty_rolodex"
+          if [ ! -f target/release/$BIN_NAME ]; then
+            echo "❌ Error: Binary '$BIN_NAME' not found in target/release"
+            exit 1
+          fi
+          tar czf rusty-rolodex-${{ github.ref_name }}-ubuntu-x86_64.tar.gz -C target/release $BIN_NAME
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
