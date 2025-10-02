@@ -1,3 +1,4 @@
+use chrono::Utc;
 use clap::{Parser, Subcommand};
 use std::env;
 
@@ -49,6 +50,21 @@ enum Commands {
         #[arg(long)]
         phone: Option<String>,
     },
+    Update {
+        #[arg(long)]
+        name: String,
+        #[arg(long)]
+        phone: String,
+        #[arg(long, value_delimiter = ',')]
+        tags: Vec<String>,
+        //For update
+        #[arg(long)]
+        new_name: String,
+        #[arg(long)]
+        new_phone: String,
+        #[arg(long)]
+        new_email: String,
+    },
 }
 
 fn get_store() -> Box<dyn ContactStore> {
@@ -87,14 +103,22 @@ pub fn run_command_cli() -> Result<(), AppError> {
             }
 
             let mut contacts = store.load()?;
-            let new_contact = Contact::new(&name, &phone, &email, tags.clone());
+            let new_contact =
+                Contact::new(&name, &phone, &email, tags.clone(), Utc::now(), Utc::now());
 
             if check_contact_exist(&new_contact, &contacts) {
                 return Err(AppError::Validation(
                     "Contact with info already exists".to_string(),
                 ));
             }
-            contacts.push(Contact::new(&name, &phone, &email, tags));
+            contacts.push(Contact::new(
+                &name,
+                &phone,
+                &email,
+                tags,
+                Utc::now(),
+                Utc::now(),
+            ));
             store.save(&contacts)?;
             println!("✅ Added contact: {} ({})", name, email);
         }
@@ -162,6 +186,75 @@ pub fn run_command_cli() -> Result<(), AppError> {
                 }
             }
         }
+        Commands::Update {
+            name,
+            phone,
+            tags,
+            new_name,
+            new_phone,
+            new_email,
+        } => {
+            if !validate_name(&name) {
+                return Err(AppError::Validation(ValidationResponse::check_name()));
+            }
+
+            if !validate_phone_number(&phone) {
+                return Err(AppError::Validation(
+                    ValidationResponse::check_phone_number(),
+                ));
+            }
+
+            //validation for new data -> Update
+
+            if !validate_name(&new_name) {
+                return Err(AppError::Validation("New name is Invalid".to_string()));
+            }
+
+            if !validate_email(&new_email) {
+                return Err(AppError::Validation("New email is Invalid".to_string()));
+            }
+
+            if !validate_phone_number(&new_phone) {
+                return Err(AppError::Validation(
+                    "New phone number is Invalid".to_string(),
+                ));
+            }
+
+            let mut contacts = store.load()?;
+            // contacts.retain(|c| c.name == name && c.phone == phone);
+
+            if let Some(contact) = contacts
+                .iter_mut()
+                .find(|c| c.name == name && c.phone == phone)
+            {
+                if !new_name.is_empty() {
+                    contact.name = new_name.clone();
+                }
+
+                if !new_phone.is_empty() {
+                    contact.phone = new_phone.clone();
+                }
+
+                if !new_email.is_empty() {
+                    contact.email = new_email.clone();
+                }
+                contact.tags = tags;
+                contact.created_at;
+                contact.updated_at = Utc::now();
+
+                store.save(&contacts)?;
+
+                println!(
+                    "✅ Contact updated: {} - {} ->  {} - {}",
+                    name, phone, new_name, new_phone
+                );
+            } else {
+                return Err(AppError::Parse(format!(
+                    "Contact with name '{}' and phone '{}' not found",
+                    name, phone
+                )));
+            }
+        }
     }
 
     Ok(())
@@ -173,9 +266,30 @@ mod tests {
 
     fn sample_contacts() -> Contacts {
         Contacts::new(vec![
-            Contact::new("Alice", "123", "alice@work.com", vec!["work".into()]),
-            Contact::new("Bob", "456", "bob@personal.com", vec!["personal".into()]),
-            Contact::new("Carol", "789", "carol@work.com", vec!["work".into()]),
+            Contact::new(
+                "Alice",
+                "123",
+                "alice@work.com",
+                vec!["work".into()],
+                Utc::now(),
+                Utc::now(),
+            ),
+            Contact::new(
+                "Bob",
+                "456",
+                "bob@personal.com",
+                vec!["personal".into()],
+                Utc::now(),
+                Utc::now(),
+            ),
+            Contact::new(
+                "Carol",
+                "789",
+                "carol@work.com",
+                vec!["work".into()],
+                Utc::now(),
+                Utc::now(),
+            ),
         ])
     }
 

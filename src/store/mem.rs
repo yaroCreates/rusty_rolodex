@@ -6,15 +6,26 @@ use std::{
     path::Path,
 };
 
+use chrono::{DateTime, Utc};
+
 use crate::{domain::Contact, traits::ContactStore};
 
 impl Contact {
-    pub fn new(name: &str, phone: &str, email: &str, tags: Vec<String>) -> Self {
+    pub fn new(
+        name: &str,
+        phone: &str,
+        email: &str,
+        tags: Vec<String>,
+        created_at: DateTime<Utc>,
+        updated_at: DateTime<Utc>,
+    ) -> Self {
         Self {
             name: name.to_string(),
             phone: phone.to_string(),
             email: email.to_string(),
             tags,
+            created_at,
+            updated_at,
         }
     }
 
@@ -24,7 +35,14 @@ impl Contact {
         if parts.len() != 3 {
             return Err(AppError::Parse(format!("Invalid line: {}", line)));
         }
-        Ok(Self::new(parts[0], parts[1], parts[2], vec![]))
+        Ok(Self::new(
+            parts[0],
+            parts[1],
+            parts[2],
+            vec![],
+            Utc::now(),
+            Utc::now(),
+        ))
     }
 
     pub fn has_tag(&self, tag: &str) -> bool {

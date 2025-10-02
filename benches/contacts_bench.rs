@@ -1,3 +1,4 @@
+use chrono::Utc;
 use criterion::{Criterion, criterion_group, criterion_main};
 use rusty_rolodex::domain::{Contact, Contacts};
 
@@ -9,6 +10,8 @@ fn sample_contacts(n: usize) -> Contacts {
                 &format!("000{}", i),
                 &format!("user{}@example.com", i),
                 vec!["work".into()],
+                Utc::now(),
+                Utc::now()
             )
         })
         .collect();
