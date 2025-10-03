@@ -42,6 +42,10 @@ enum Commands {
         tag: Option<String>,
         #[arg(long)]
         domain: Option<String>,
+        // #[arg(long)]
+        // created_at: Option<String>,
+        // #[arg(long)]
+        // updated_at: Option<String>
     },
     /// Delete a contact by name
     Delete {
@@ -122,7 +126,11 @@ pub fn run_command_cli() -> Result<(), AppError> {
             store.save(&contacts)?;
             println!("✅ Added contact: {} ({})", name, email);
         }
-        Commands::List { sort, tag, domain } => {
+        Commands::List {
+            sort,
+            tag,
+            domain
+        } => {
             let contacts_vec = store.load()?;
             let contacts = Contacts::new(contacts_vec);
 
@@ -137,6 +145,12 @@ pub fn run_command_cli() -> Result<(), AppError> {
                 match sort_key.as_str() {
                     "name" => filtered_contacts.sort_by(|a, b| a.name.cmp(&b.name)),
                     "email" => filtered_contacts.sort_by(|a, b| a.email.cmp(&b.email)),
+                    "created_at" => {
+                        filtered_contacts.sort_by(|a, b| a.created_at.cmp(&b.created_at))
+                    }
+                    "updated_at" => {
+                        filtered_contacts.sort_by(|a, b| a.updated_at.cmp(&b.updated_at))
+                    }
                     _ => println!("⚠️ Unsupported sort key: {}", sort_key),
                 }
             }
@@ -221,7 +235,6 @@ pub fn run_command_cli() -> Result<(), AppError> {
             }
 
             let mut contacts = store.load()?;
-            // contacts.retain(|c| c.name == name && c.phone == phone);
 
             if let Some(contact) = contacts
                 .iter_mut()
