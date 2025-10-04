@@ -11,7 +11,7 @@ fn sample_contacts(n: usize) -> Contacts {
                 &format!("user{}@example.com", i),
                 vec!["work".into()],
                 Utc::now(),
-                Utc::now()
+                Utc::now(),
             )
         })
         .collect();

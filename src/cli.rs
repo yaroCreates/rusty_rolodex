@@ -2,7 +2,7 @@ use chrono::Utc;
 use clap::{Parser, Subcommand};
 use std::env;
 
-use crate::domain::{Contact, Contacts};
+use crate::domain::{Contact, Contacts, export_csv, import_csv};
 use crate::store::mem::{AppError, FileStore, MemStore};
 use crate::traits::ContactStore;
 use crate::validation::{
@@ -69,6 +69,14 @@ enum Commands {
         #[arg(long)]
         new_email: String,
     },
+    ExportCsv {
+        #[arg(long, default_value = "contacts.csv")]
+        path: String,
+    },
+    ImportCsv {
+        #[arg(long, default_value = "contacts.csv")]
+        path: String,
+    },
 }
 
 fn get_store() -> Box<dyn ContactStore> {
@@ -126,11 +134,7 @@ pub fn run_command_cli() -> Result<(), AppError> {
             store.save(&contacts)?;
             println!("✅ Added contact: {} ({})", name, email);
         }
-        Commands::List {
-            sort,
-            tag,
-            domain
-        } => {
+        Commands::List { sort, tag, domain } => {
             let contacts_vec = store.load()?;
             let contacts = Contacts::new(contacts_vec);
 
@@ -252,7 +256,7 @@ pub fn run_command_cli() -> Result<(), AppError> {
                     contact.email = new_email.clone();
                 }
                 contact.tags = tags;
-                contact.created_at;
+                // contact.created_at;
                 contact.updated_at = Utc::now();
 
                 store.save(&contacts)?;
@@ -267,6 +271,18 @@ pub fn run_command_cli() -> Result<(), AppError> {
                     name, phone
                 )));
             }
+        }
+        Commands::ExportCsv { path } => {
+            let contacts = store.load()?;
+            export_csv(&path, &contacts)?;
+            println!("✅ Exported {} contacts to {}", contacts.len(), path);
+        }
+        Commands::ImportCsv { path } => {
+            let mut contacts = store.load()?;
+            let imported = import_csv(&path)?;
+            contacts.extend(imported);
+            store.save(&contacts)?;
+            println!("✅ Imported contacts from {}", path);
         }
     }
 
