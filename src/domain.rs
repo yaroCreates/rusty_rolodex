@@ -69,11 +69,12 @@ pub fn export_csv(path: &str, contacts: &[Contact]) -> Result<Vec<Contact>, AppE
     let file = File::create(path)?;
     let mut wtr = Writer::from_writer(file);
     // println!("Export files: {:?}", wtr.serialize(contacts.first()));
-        println!("Export files: {:?}", (contacts.len()));
+    println!("Export files: {:?}", (contacts.len()));
 
     for c in contacts {
         wtr.serialize(Some(c))
-            .map_err(|e| AppError::Parse(e.to_string())).unwrap();
+            .map_err(|e| AppError::Parse(e.to_string()))
+            .unwrap();
     }
     wtr.flush()?;
     Ok(contacts.to_vec())

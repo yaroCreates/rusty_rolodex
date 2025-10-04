@@ -291,6 +291,7 @@ pub fn run_command_cli() -> Result<(), AppError> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     fn sample_contacts() -> Contacts {

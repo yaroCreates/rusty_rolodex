@@ -1,70 +1,12 @@
-# Walkthrough (Week 2)
-
-
-The Contact app has been updated to either run on `Memory storage` and `File storage`, with the latter persisted.
-
-By Default, the application runs on the File Storage (`cargo run`).
-
-![alt text](image.png)
-
-With the use of .env variable, the runtime store can be changed to `MemStore` by running:.
-
-`STORE_TYPE=mem cargo run`
-
-![alt text](image-1.png)
-
-### MemStore
-Contacts added to the `MemStore` are lost after the application is ended or restarted.
-
-![alt text](image-2.png)
-
-Adding Contact
-
-![alt text](image-4.png)
-
-Viewing contact list
-
-![alt text](image-5.png)
-
-After restarting, the Contact list is cleared...
-
-![alt text](image-6.png)
----
-
-### FileStore
-`cargo run` lunches the app on the default store (FileStore)
-
-![alt text](image-7.png)
-
-View Contact list...
-
-![alt text](image-8.png)
-
-Let's add a contact to test the persistence:
-
-![alt text](image-9.png)
-
-Resetting the app
-
-![alt text](image-10.png)
-
-![alt text](image-11.png)
-
----
-# Week 4
-
-## Correction from week 3
-- ✅️ Pipeline fix
-- ✅️ Check for duplicate name before adding contacts
-- ✅️ Deleting contact with same name (Going to be concluded)
-- ✅️ Updated Phone number validation function name
-- ✅️ Contact.txt -> Contact.json Migration
-- ✅️ Versioned release via Git tag
+# Week 5
 
 ## Tasks
-Iterator over contact - filter with tags and domain.
+- Add `chrono` timestamps
+- Update contact
+- Export and Import CSV
 
-In achieving filters by tags or domain, the Contact Struct had to be first updated to accept tags upon creation. In order to support backward compatiblity, the tag field is defined optional so as to support contacts that were created before the feature.
+### Add `chrono` timestamps
+Updated Contact struct with `created_at` and `updated_at` fields.
 
 ```rust
 pub struct Contact {
@@ -73,28 +15,32 @@ pub struct Contact {
     pub email: String,
     #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
+    pub created_at: DateTime<Utc>,
+    #[serde(default)]
+    pub updated_at: DateTime<Utc>,
 }
 ```
 
-Running the command to return the contact...
+Adding a contact now automatically adds the `created_at` and `updated_at` fields.
+
+![alt text](image-13.png)
+
+Results
+![alt text](image-14.png)
+
+### Update contacts
+An `update` command was added to the Cli that handles the updating of contacts.
 
 ```bash
-cargo run -- list
+cargo run -- update --name <NAME> --phone <PHONE> --new-name <NEW-NAME> --new-phone <NEW-PHONE> --new-email <NEW-EMAIL>
 ```
-![alt text](media/image-12.png)
 
-Running filter by domain
+Let us update the recent ("testing") contact we added by passing the name and phone number along side a new phone number:
+
 ```bash
-cargo run -- list --domain "example.com"
+cargo run -- update --name "testing" --phone "080123456789" --new-name "testing" --new-phone "0802447744774" --new-email "testing@gmail.com"
 ```
-![alt text](image-12.png)
+![alt text](image-15.png)
 
-## Integration test (Black-box testing)
-The integration test contains a full run through of the entire app, creating two scenarios for:
-- Adding and Listing
-- Adding, Deleting and Listing
-
-![alt text](media/image-13.png)
-
-## Demo
-![alt text](media/week-4-demo.gif)
+### Export and import CSV

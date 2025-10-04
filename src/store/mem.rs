@@ -61,7 +61,7 @@ const TXT_FILE_PATH: &str = "contacts.txt";
 pub enum AppError {
     Io(std::io::Error),
     Parse(String),
-    Validation(String)
+    Validation(String),
 }
 
 impl std::fmt::Display for AppError {
