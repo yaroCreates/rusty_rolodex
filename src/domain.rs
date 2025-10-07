@@ -64,7 +64,7 @@ impl<'a> Iterator for ContactsIter<'a> {
     }
 }
 
-pub fn export_csv(path: &str, contacts: &[Contact]) -> Result<Vec<Contact>, AppError> {
+pub fn export_csv(path: &str, contacts: &[Contact]) -> Result<(), AppError> {
     println!("Export Path: {}", path);
     let file = File::create(path)?;
     let mut wtr = Writer::from_writer(file);
@@ -77,7 +77,7 @@ pub fn export_csv(path: &str, contacts: &[Contact]) -> Result<Vec<Contact>, AppE
             .unwrap();
     }
     wtr.flush()?;
-    Ok(contacts.to_vec())
+    Ok(())
 }
 
 pub fn import_csv(path: &str) -> Result<Vec<Contact>, AppError> {

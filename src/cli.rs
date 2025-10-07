@@ -63,11 +63,11 @@ enum Commands {
         tags: Vec<String>,
         //For update
         #[arg(long)]
-        new_name: String,
+        new_name: Option<String>,
         #[arg(long)]
-        new_phone: String,
+        new_phone: Option<String>,
         #[arg(long)]
-        new_email: String,
+        new_email: Option<String>,
     },
     ExportCsv {
         #[arg(long, default_value = "contacts.csv")]
@@ -223,20 +223,9 @@ pub fn run_command_cli() -> Result<(), AppError> {
             }
 
             //validation for new data -> Update
-
-            if !validate_name(&new_name) {
-                return Err(AppError::Validation("New name is Invalid".to_string()));
-            }
-
-            if !validate_email(&new_email) {
-                return Err(AppError::Validation("New email is Invalid".to_string()));
-            }
-
-            if !validate_phone_number(&new_phone) {
-                return Err(AppError::Validation(
-                    "New phone number is Invalid".to_string(),
-                ));
-            }
+            let new_name = new_name.unwrap_or_default();
+            let new_phone = new_phone.unwrap_or_default();
+            let new_email = new_email.unwrap_or_default();
 
             let mut contacts = store.load()?;
 
@@ -245,25 +234,35 @@ pub fn run_command_cli() -> Result<(), AppError> {
                 .find(|c| c.name == name && c.phone == phone)
             {
                 if !new_name.is_empty() {
+                    if !validate_name(&new_name) {
+                        return Err(AppError::Validation("New name is Invalid".to_string()));
+                    }
                     contact.name = new_name.clone();
                 }
 
                 if !new_phone.is_empty() {
+                    if !validate_phone_number(&new_phone) {
+                        return Err(AppError::Validation(
+                            "New phone number is Invalid".to_string(),
+                        ));
+                    }
                     contact.phone = new_phone.clone();
                 }
 
                 if !new_email.is_empty() {
+                    if !validate_email(&new_email) {
+                        return Err(AppError::Validation("New email is Invalid".to_string()));
+                    }
                     contact.email = new_email.clone();
                 }
                 contact.tags = tags;
-                // contact.created_at;
                 contact.updated_at = Utc::now();
 
                 store.save(&contacts)?;
 
                 println!(
-                    "✅ Contact updated: {} - {} ->  {} - {}",
-                    name, phone, new_name, new_phone
+                    "✅ Contact updated: {} - {} ->  {} - {} - {}",
+                    name, phone, new_name, new_phone, new_email
                 );
             } else {
                 return Err(AppError::Parse(format!(
