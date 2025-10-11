@@ -2,7 +2,7 @@ use chrono::Utc;
 use clap::{Parser, Subcommand};
 use std::env;
 
-use crate::domain::{Contact, Contacts, export_csv, import_csv};
+use crate::domain::{Contact, Contacts, ContactsIndex, export_csv, import_csv};
 use crate::store::mem::{AppError, FileStore, MemStore};
 use crate::traits::ContactStore;
 use crate::validation::{
@@ -76,6 +76,14 @@ enum Commands {
     ImportCsv {
         #[arg(long, default_value = "contacts.csv")]
         path: String,
+    },
+    Search {
+        #[arg(long)]
+        name: Option<String>,
+        #[arg(long)]
+        domain: Option<String>,
+        #[arg(long)]
+        fuzzy: Option<String>,
     },
 }
 
@@ -282,6 +290,50 @@ pub fn run_command_cli() -> Result<(), AppError> {
             contacts.extend(imported);
             store.save(&contacts)?;
             println!("✅ Imported contacts from {}", path);
+        }
+        Commands::Search {
+            name,
+            domain,
+            fuzzy,
+        } => {
+            let contacts = store.load()?;
+
+            let index = ContactsIndex::build(&contacts);
+            println!("Index: {:?}", index);
+
+            let mut matches: Vec<usize> = Vec::new();
+
+            if let Some(n) = name {
+                matches.extend(index.lookup_name(&n));
+            }
+
+            if let Some(d) = domain {
+                matches.extend(index.lookup_domain(&d));
+            }
+
+            if let Some(f) = fuzzy {
+                matches.extend(index.fuzzy_search(&f, &contacts));
+            }
+
+            println!("Matches {:?}", matches);
+
+            if matches.is_empty() {
+                println!("No contacts matched your search.");
+                return Ok(());
+            }
+
+            println!("Found {} result(s)", matches.len());
+            for i in matches {
+                if let Some(c) = contacts.get(i) {
+                    println!(
+                        "- {} - {} - {} - [{}]",
+                        c.name,
+                        c.phone,
+                        c.email,
+                        c.tags.join(", ")
+                    )
+                }
+            }
         }
     }
 

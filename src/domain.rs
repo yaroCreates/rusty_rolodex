@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::{collections::HashMap, fs::File};
 
 use chrono::{DateTime, Utc};
 use csv::{ReaderBuilder, Writer};
@@ -94,4 +94,55 @@ pub fn import_csv(path: &str) -> Result<Vec<Contact>, AppError> {
         return Err(AppError::Parse("Error: No CSV data".to_string()));
     }
     Ok(contacts)
+}
+
+#[derive(Debug)]
+pub struct ContactsIndex {
+    name_map: HashMap<String, Vec<usize>>,
+    domain_map: HashMap<String, Vec<usize>>,
+}
+
+impl ContactsIndex {
+    pub fn build(contacts: &[Contact]) -> Self {
+        let mut name_map: HashMap<String, Vec<usize>> = HashMap::new();
+        let mut domain_map: HashMap<String, Vec<usize>> = HashMap::new();
+
+        for (i, c) in contacts.iter().enumerate() {
+            let name_key = c.name.to_lowercase();
+            name_map.entry(name_key).or_default().push(i);
+
+            if let Some(domain) = c.email.split('@').nth(1) {
+                let domain_key = domain.to_lowercase();
+                domain_map.entry(domain_key).or_default().push(i);
+            }
+        }
+
+        ContactsIndex {
+            name_map,
+            domain_map,
+        }
+    }
+
+    pub fn lookup_name(&self, name: &str) -> Vec<usize> {
+        let key = name.to_lowercase();
+        self.name_map.get(&key).cloned().unwrap_or_default()
+    }
+
+    pub fn lookup_domain(&self, domain: &str) -> Vec<usize> {
+        let key = domain.to_lowercase();
+        self.domain_map.get(&key).cloned().unwrap_or_default()
+    }
+
+    pub fn fuzzy_search(&self, query: &str, contacts: &[Contact]) -> Vec<usize> {
+        let q = query.to_lowercase();
+        let mut results = Vec::new();
+
+        for (i, c) in contacts.iter().enumerate() {
+            if c.name.to_lowercase().contains(&q) || c.email.to_lowercase().contains(&q) {
+                results.push(i);
+            }
+        }
+
+        results
+    }
 }
