@@ -1,46 +1,23 @@
-# Week 5
+# Week 6
 
 ## Tasks
-- Add `chrono` timestamps
-- Update contact
-- Export and Import CSV
+- Implement simple in-memory index by name/email domain.
 
-### Add `chrono` timestamps
-Updated Contact struct with `created_at` and `updated_at` fields.
+- Add fuzzy contains search (case-insensitive).
+
+- Optional: use Rust std threads (not Rayon) to perform searches concurrently across chunks of data.
+
+## Thought on `Searching & Indexing`
+Before really starting on the week's tasks, I had to study about Indexing in Database and how it is works. Database indexing is a technique that uses a data structure, like a sorted list, to speed up data retrieval from a database table. It works by creating a special lookup table that holds indexed column values and pointers to the original values, allowing the database to find data much faster than scanning the entire table.
+
+---
+With this understanding, I made use of the `Hash Maps` to achieve this, storing and grouping the position of the values first before retrieving them.
 
 ```rust
-pub struct Contact {
-    pub name: String,
-    pub phone: String,
-    pub email: String,
-    #[serde(default)]
-    pub tags: Vec<String>,
-    #[serde(default)]
-    pub created_at: DateTime<Utc>,
-    #[serde(default)]
-    pub updated_at: DateTime<Utc>,
+pub struct ContactsIndex {
+    name_map: HashMap<String, Vec<usize>>,
+    domain_map: HashMap<String, Vec<usize>>,
 }
 ```
 
-Adding a contact now automatically adds the `created_at` and `updated_at` fields.
-
-![alt text](image-13.png)
-
-Results
-![alt text](image-14.png)
-
-### Update contacts
-An `update` command was added to the Cli that handles the updating of contacts.
-
-```bash
-cargo run -- update --name <NAME> --phone <PHONE> --new-name <NEW-NAME> --new-phone <NEW-PHONE> --new-email <NEW-EMAIL>
-```
-
-Let us update the recent ("testing") contact we added by passing the name and phone number along side a new phone number:
-
-```bash
-cargo run -- update --name "testing" --phone "080123456789" --new-name "testing" --new-phone "0802447744774" --new-email "testing@gmail.com"
-```
-![alt text](image-15.png)
-
-### Export and import CSV
+### Implement simple in-memory index by name/email domain.
