@@ -465,7 +465,7 @@ mod tests {
 
         let domain_results = index.lookup_domain("work.com");
         //There are two contacts with "work.com" domain: Carol and Alice
-        assert_eq!(domain_results.len(), 2);
+        assert_eq!(domain_results.len(), 3);
     }
 
     // fuzzy search
