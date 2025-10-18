@@ -1,7 +1,13 @@
-use std::{collections::HashMap, fs::File};
+use std::{
+    collections::HashMap,
+    fs::File,
+    sync::{Arc, Mutex},
+    thread,
+};
 
 use chrono::{DateTime, Utc};
 use csv::{ReaderBuilder, Writer};
+use fuzzy_search::distance::levenshtein;
 use serde::{Deserialize, Serialize};
 
 use crate::prelude::AppError;
@@ -133,16 +139,78 @@ impl ContactsIndex {
         self.domain_map.get(&key).cloned().unwrap_or_default()
     }
 
-    pub fn fuzzy_search(&self, query: &str, contacts: &[Contact]) -> Vec<usize> {
+    pub fn fuzzy_search(&self, query: &str, contacts: &[Contact], max_edits: usize) -> Vec<usize> {
+        println!("Running fuzzy search...");
         let q = query.to_lowercase();
         let mut results = Vec::new();
 
         for (i, c) in contacts.iter().enumerate() {
-            if c.name.to_lowercase().contains(&q) || c.email.to_lowercase().contains(&q) {
+            let name_distance = levenshtein(&q, &c.name.to_lowercase());
+            let email_distance = levenshtein(&q, &c.email.to_lowercase());
+
+            if name_distance < max_edits || email_distance < max_edits {
                 results.push(i);
             }
         }
 
         results
+    }
+
+    pub fn fuzzy_search_concurrency(
+        &self,
+        query: &str,
+        contacts: &[Contact],
+        max_edits: usize,
+    ) -> Vec<usize> {
+        println!("Running fuzzy search with concurrency...");
+        let num_threads = 4;
+        // let size_of_chunk = (contacts.len() + num_threads - 1) /num_threads;
+        let size_of_chunk = contacts.len().div_ceil(num_threads).div_ceil(num_threads);
+        let query = query.to_lowercase();
+
+        //Sharing data between threads
+        let contacts_arc = Arc::new(contacts.to_vec());
+        let results = Arc::new(Mutex::new(Vec::new()));
+
+        let mut handles = Vec::new();
+
+        //Splitting into Chunks -> Spawn threads
+        for start_of_chunk in (0..contacts.len()).step_by(size_of_chunk) {
+            let end_of_chunk = usize::min(start_of_chunk + size_of_chunk, contacts.len());
+            let chunk_contacts = contacts_arc.clone();
+            let query_clone = query.clone();
+            let results_clone = Arc::clone(&results);
+
+            let handle = thread::spawn(move || {
+                let mut local_results = Vec::new();
+
+                //Each threads going to work!
+                for (i, c) in chunk_contacts[start_of_chunk..end_of_chunk]
+                    .iter()
+                    .enumerate()
+                {
+                    let name_distance = levenshtein(&query_clone, &c.name.to_lowercase());
+                    let email_distance = levenshtein(&query_clone, &c.email.to_lowercase());
+
+                    if name_distance <= max_edits || email_distance <= max_edits {
+                        local_results.push(start_of_chunk + i);
+                    }
+                }
+
+                // Merge partial results
+                let mut global_results = results_clone.lock().unwrap();
+                global_results.extend(local_results);
+            });
+
+            handles.push(handle);
+        }
+
+        // Waiting for all the threads to complete
+        for handle in handles {
+            handle.join().expect("Thread panicked");
+        }
+
+        // Get final results
+        Arc::try_unwrap(results).unwrap().into_inner().unwrap()
     }
 }

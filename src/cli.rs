@@ -1,5 +1,5 @@
 use chrono::Utc;
-use clap::{Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand};
 use std::env;
 
 use crate::domain::{Contact, Contacts, ContactsIndex, export_csv, import_csv};
@@ -84,6 +84,10 @@ enum Commands {
         domain: Option<String>,
         #[arg(long)]
         fuzzy: Option<String>,
+        #[arg(short, long, default_value_t = 2)]
+        max_edits: usize,
+        #[arg(long, action = ArgAction::SetTrue, default_value_t = false)]
+        concurrent: bool,
     },
 }
 
@@ -295,6 +299,8 @@ pub fn run_command_cli() -> Result<(), AppError> {
             name,
             domain,
             fuzzy,
+            max_edits,
+            concurrent,
         } => {
             let contacts = store.load()?;
 
@@ -312,7 +318,11 @@ pub fn run_command_cli() -> Result<(), AppError> {
             }
 
             if let Some(f) = fuzzy {
-                matches.extend(index.fuzzy_search(&f, &contacts));
+                if concurrent {
+                    matches.extend(index.fuzzy_search_concurrency(&f, &contacts, max_edits));
+                } else {
+                    matches.extend(index.fuzzy_search(&f, &contacts, max_edits));
+                }
             }
 
             println!("Matches {:?}", matches);
@@ -342,6 +352,8 @@ pub fn run_command_cli() -> Result<(), AppError> {
 
 #[cfg(test)]
 mod tests {
+
+    use std::time::Instant;
 
     use super::*;
 
@@ -374,6 +386,43 @@ mod tests {
         ])
     }
 
+    fn sample_contacts2() -> Vec<Contact> {
+        vec![
+            Contact::new(
+                "Alice",
+                "123",
+                "alice@work.com",
+                vec!["work".into()],
+                Utc::now(),
+                Utc::now(),
+            ),
+            Contact::new(
+                "Alicia",
+                "123",
+                "alicia@work.com",
+                vec!["work".into()],
+                Utc::now(),
+                Utc::now(),
+            ),
+            Contact::new(
+                "Bob",
+                "456",
+                "bob@personal.com",
+                vec!["personal".into()],
+                Utc::now(),
+                Utc::now(),
+            ),
+            Contact::new(
+                "Carol",
+                "789",
+                "carol@work.com",
+                vec!["work".into()],
+                Utc::now(),
+                Utc::now(),
+            ),
+        ]
+    }
+
     #[test]
     fn test_filter_by_tag() {
         let contacts = sample_contacts();
@@ -404,17 +453,142 @@ mod tests {
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "Alice");
     }
+
+    #[test]
+    fn test_index_and_lookup() {
+        let contacts = sample_contacts2();
+        let index = ContactsIndex::build(&contacts);
+
+        let position = index.lookup_name("Alice");
+        assert_eq!(position.len(), 1);
+        assert_eq!(contacts[position[0]].email, "alice@work.com");
+
+        let domain_results = index.lookup_domain("work.com");
+        //There are two contacts with "work.com" domain: Carol and Alice
+        assert_eq!(domain_results.len(), 2);
+    }
+
+    // fuzzy search
+    #[test]
+    fn test_exact_match_name() {
+        let contacts = sample_contacts2();
+        let index = ContactsIndex::build(&contacts);
+        let results = index.fuzzy_search("Alice", &contacts, 1);
+        println!("Results {:?}", results);
+        assert_eq!(results, vec![0]);
+    }
+
+    // benchmarking
+    // 1. Concurrent fuzzy search
+    #[test]
+    fn benchmark_fuzzy_search_concurrent() {
+        // Generate 10,000 fake contacts
+        let contacts: Vec<_> = (0..10_000)
+            .map(|i| Contact {
+                name: format!("Person{}", i),
+                email: format!("person{}@mail.com", i),
+                phone: format!("232323323211"),
+                tags: vec!["bench".into()],
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+            })
+            .collect();
+
+        let index = ContactsIndex::build(&contacts);
+        let query = "Person1234";
+
+        let start = Instant::now();
+        let _results = index.fuzzy_search_concurrency(query, &contacts, 1);
+        let duration = start.elapsed();
+
+        println!(
+            "Concurrent fuzzy search completed in: {:?} ({} contacts)",
+            duration,
+            contacts.len()
+        );
+
+        // assert!(duration.as_secs_f64() < 0.5, "Search took too long!");
+    }
+    #[test]
+    fn benchmark_fuzzy_search() {
+        // Generate 10,000 fake contacts
+        let contacts: Vec<_> = (0..10_000)
+            .map(|i| Contact {
+                name: format!("Person{}", i),
+                email: format!("person{}@mail.com", i),
+                phone: format!("232323323211"),
+                tags: vec!["bench".into()],
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+            })
+            .collect();
+
+        let index = ContactsIndex::build(&contacts);
+        let query = "Person1234";
+
+        let start = Instant::now();
+        let _results = index.fuzzy_search(query, &contacts, 2);
+        let duration = start.elapsed();
+
+        println!(
+            "Normal fuzzy search completed in: {:?} ({} contacts)",
+            duration,
+            contacts.len()
+        );
+    }
+
+    #[test]
+    fn benchmark_name_lookup() {
+        // Generate 10,000 fake contacts
+        let contacts: Vec<_> = (0..10_000)
+            .map(|i| Contact {
+                name: format!("Person{}", i),
+                email: format!("person{}@mail.com", i),
+                phone: format!("232323323211"),
+                tags: vec!["bench".into()],
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+            })
+            .collect();
+
+        let index = ContactsIndex::build(&contacts);
+        let query = "Person1234";
+
+        let start = Instant::now();
+        let _results = index.lookup_name(query);
+        let duration = start.elapsed();
+
+        println!(
+            "Name lookup search completed in: {:?} ({} contacts)",
+            duration,
+            contacts.len()
+        );
+    }
+    #[test]
+    fn benchmark_domain_lookup() {
+        // Generate 10,000 fake contacts
+        let contacts: Vec<_> = (0..10_000)
+            .map(|i| Contact {
+                name: format!("Person{}", i),
+                email: format!("person{}@work.com", i),
+                phone: format!("232323323211"),
+                tags: vec!["bench".into()],
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+            })
+            .collect();
+
+        let index = ContactsIndex::build(&contacts);
+        let query = "work.com";
+
+        let start = Instant::now();
+        let _results = index.lookup_domain(query);
+        let duration = start.elapsed();
+
+        println!(
+            "Domain lookup search completed in: {:?} ({} contacts)",
+            duration,
+            contacts.len()
+        );
+    }
 }
-
-//Borrow check test
-// #[test]
-// fn test_as_slice() {
-//     let contacts = Contacts::new(vec![
-//         Contact::new("Alice", "123", "alice@work.com", vec!["work".into()]),
-//         Contact::new("Bob", "456", "bob@home.com", vec![]),
-//     ]);
-
-//     let slice = contacts.as_slice();
-//     assert_eq!(slice.len(), 2);
-//     assert_eq!(slice[0].name, "Alice");
-// }
