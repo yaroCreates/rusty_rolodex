@@ -1,5 +1,5 @@
 use chrono::Utc;
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use std::env;
 
 use crate::domain::{Contact, Contacts, ContactsIndex, export_csv, import_csv};
@@ -83,11 +83,7 @@ enum Commands {
         #[arg(long)]
         domain: Option<String>,
         #[arg(long)]
-        fuzzy: Option<String>,
-        #[arg(short, long, default_value_t = 2)]
-        max_edits: usize,
-        #[arg(long, action = ArgAction::SetTrue, default_value_t = false)]
-        concurrent: bool,
+        fuzzy: Option<String>
     },
 }
 
@@ -298,9 +294,7 @@ pub fn run_command_cli() -> Result<(), AppError> {
         Commands::Search {
             name,
             domain,
-            fuzzy,
-            max_edits,
-            concurrent,
+            fuzzy
         } => {
             let contacts = store.load()?;
 
@@ -318,11 +312,7 @@ pub fn run_command_cli() -> Result<(), AppError> {
             }
 
             if let Some(f) = fuzzy {
-                if concurrent {
-                    matches.extend(index.fuzzy_search_concurrency(&f, &contacts, max_edits));
-                } else {
-                    matches.extend(index.fuzzy_search(&f, &contacts, max_edits));
-                }
+                    matches.extend(index.fuzzy_search(&f, &contacts, 2))
             }
 
             println!("Matches {:?}", matches);
