@@ -16,9 +16,15 @@ fn bench_fuzzy_search(c: &mut Criterion) {
 
     let index = ContactsIndex::build(&contacts);
 
+    c.bench_function("fuzzy_search", |b| {
+        b.iter(|| {
+            let _ = index.fuzzy_search("Person1234", &contacts, 2);
+        })
+    });
+
     c.bench_function("fuzzy_search_concurrent", |b| {
         b.iter(|| {
-            let _ = index.fuzzy_search_concurrency("Person1234", &contacts, 4);
+            let _ = index.fuzzy_search_concurrency("Person1234", &contacts, 2);
         })
     });
 }
