@@ -20,4 +20,6 @@ pub struct ContactsIndex {
 }
 ```
 
-### Implement simple in-memory index by name/email domain.
+## Benchmarking
+### - Name lookup
+
