@@ -2,7 +2,7 @@ use chrono::Utc;
 use clap::{Parser, Subcommand};
 use std::env;
 
-use crate::domain::{Contact, Contacts, ContactsIndex, export_csv, import_csv};
+use crate::domain::{Contact, Contacts, export_csv, import_csv};
 use crate::store::mem::{AppError, FileStore, MemStore};
 use crate::traits::ContactStore;
 use crate::validation::{
@@ -296,44 +296,12 @@ pub fn run_command_cli() -> Result<(), AppError> {
             domain,
             fuzzy
         } => {
-            let contacts = store.load()?;
 
-            let index = ContactsIndex::build(&contacts);
-            println!("Index: {:?}", index);
+            let name = name.unwrap_or_default();
+            let domain = domain.unwrap_or_default();
+            let fuzzy = fuzzy.unwrap_or_default();
 
-            let mut matches: Vec<usize> = Vec::new();
-
-            if let Some(n) = name {
-                matches.extend(index.lookup_name(&n));
-            }
-
-            if let Some(d) = domain {
-                matches.extend(index.lookup_domain(&d));
-            }
-
-            if let Some(f) = fuzzy {
-                    matches.extend(index.fuzzy_search(&f, &contacts, 2))
-            }
-
-            println!("Matches {:?}", matches);
-
-            if matches.is_empty() {
-                println!("No contacts matched your search.");
-                return Ok(());
-            }
-
-            println!("Found {} result(s)", matches.len());
-            for i in matches {
-                if let Some(c) = contacts.get(i) {
-                    println!(
-                        "- {} - {} - {} - [{}]",
-                        c.name,
-                        c.phone,
-                        c.email,
-                        c.tags.join(", ")
-                    )
-                }
-            }
+            let _details = store.search(name, domain, fuzzy)?;
         }
     }
 
@@ -344,6 +312,8 @@ pub fn run_command_cli() -> Result<(), AppError> {
 mod tests {
 
     use std::time::Instant;
+
+    use crate::store::mem::ContactsIndex;
 
     use super::*;
 

@@ -1,12 +1,11 @@
 #![allow(dead_code)]
 
 use std::{
-    fs,
-    // io::{self, Write},
-    path::Path,
+    collections::HashMap, fs, path::Path, sync::{Arc, Mutex}, thread
 };
 
 use chrono::{DateTime, Utc};
+use fuzzy_search::distance::levenshtein;
 
 use crate::{domain::Contact, traits::ContactStore};
 
@@ -128,6 +127,49 @@ impl ContactStore for FileStore {
         fs::write(JSON_FILE_PATH, data)?;
         Ok(())
     }
+
+    fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError> {
+        let contacts = self.load()?;
+
+        let index = ContactsIndex::build(&contacts);
+
+        let mut matches: Vec<usize> = Vec::new();
+
+        if !name.is_empty() {
+            matches.extend(index.lookup_name(&name));
+        }
+
+        if !domain.is_empty() {
+            matches.extend(index.lookup_domain(&domain));
+        }
+
+        if !fuzzy.is_empty() {
+                matches.extend(index.fuzzy_search(&fuzzy, &contacts, 2))
+        }
+
+        println!("Matches {:?}", matches);
+
+        if matches.is_empty() {
+            println!("No contacts matched your search.")
+            // return Ok(());
+        }
+
+        println!("Found {} result(s)", matches.len());
+        for i in matches.clone() {
+            if let Some(c) = contacts.get(i) {
+                println!(
+                    "- {} - {} - {} - [{}]",
+                    c.name,
+                    c.phone,
+                    c.email,
+                    c.tags.join(", ")
+                )
+            }
+        }
+        Ok(matches)
+
+
+    }
 }
 
 //Memory storage
@@ -153,5 +195,157 @@ impl ContactStore for MemStore {
     fn save(&self, contacts: &[Contact]) -> Result<(), AppError> {
         *self.contacts.borrow_mut() = contacts.to_vec();
         Ok(())
+    }
+    fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError> {
+        let contacts = self.load()?;
+        let index = ContactsIndex::build(&contacts);
+
+        let mut matches:Vec<usize> = Vec::new();
+
+        if !name.is_empty() {
+            matches.extend(index.lookup_name(&name));
+        }
+
+        if !domain.is_empty() {
+            matches.extend(index.lookup_domain(&domain));
+        }
+
+        if !fuzzy.is_empty() {
+            matches.extend(index.fuzzy_search(&fuzzy, &contacts, 2));
+        }
+
+        matches.sort_unstable();
+        matches.dedup();
+
+        if matches.is_empty() {
+            println!("No contacts matched your search.");
+        } else {
+            println!("Found {} result(s)", matches.len());
+            for i in &matches {
+                if let Some(c) = contacts.get(*i) {
+                    println!(
+                        "- {} - {} - {} - [{}]",
+                        c.name,
+                        c.phone,
+                        c.email,
+                        c.tags.join(", ")
+                    );
+                }
+            }
+        }
+        Ok(matches)
+    }
+}
+
+#[derive(Debug)]
+pub struct ContactsIndex {
+    name_map: HashMap<String, Vec<usize>>,
+    domain_map: HashMap<String, Vec<usize>>,
+}
+
+impl ContactsIndex {
+    pub fn build(contacts: &[Contact]) -> Self {
+        let mut name_map: HashMap<String, Vec<usize>> = HashMap::new();
+        let mut domain_map: HashMap<String, Vec<usize>> = HashMap::new();
+
+        for (i, c) in contacts.iter().enumerate() {
+            let name_key = c.name.to_lowercase();
+            name_map.entry(name_key).or_default().push(i);
+
+            if let Some(domain) = c.email.split('@').nth(1) {
+                let domain_key = domain.to_lowercase();
+                domain_map.entry(domain_key).or_default().push(i);
+            }
+        }
+
+        ContactsIndex {
+            name_map,
+            domain_map,
+        }
+    }
+
+    pub fn lookup_name(&self, name: &str) -> Vec<usize> {
+        let key = name.to_lowercase();
+        self.name_map.get(&key).cloned().unwrap_or_default()
+    }
+
+    pub fn lookup_domain(&self, domain: &str) -> Vec<usize> {
+        let key = domain.to_lowercase();
+        self.domain_map.get(&key).cloned().unwrap_or_default()
+    }
+
+    pub fn fuzzy_search(&self, query: &str, contacts: &[Contact], max_edits: usize) -> Vec<usize> {
+        println!("Running fuzzy search...");
+        let q = query.to_lowercase();
+        let mut results = Vec::new();
+
+        for (i, c) in contacts.iter().enumerate() {
+            let name_distance = levenshtein(&q, &c.name.to_lowercase());
+            let email_distance = levenshtein(&q, &c.email.to_lowercase());
+
+            if name_distance < max_edits || email_distance < max_edits {
+                results.push(i);
+            }
+        }
+
+        results
+    }
+
+    pub fn fuzzy_search_concurrency(
+        &self,
+        query: &str,
+        contacts: &[Contact],
+        max_edits: usize,
+    ) -> Vec<usize> {
+        println!("Running fuzzy search with concurrency...");
+        let num_threads = 4;
+        // let size_of_chunk = (contacts.len() + num_threads - 1) /num_threads;
+        let size_of_chunk = contacts.len().div_ceil(num_threads).div_ceil(num_threads);
+        let query = query.to_lowercase();
+
+        //Sharing data between threads
+        let contacts_arc = Arc::new(contacts.to_vec());
+        let results = Arc::new(Mutex::new(Vec::new()));
+
+        let mut handles = Vec::new();
+
+        //Splitting into Chunks -> Spawn threads
+        for start_of_chunk in (0..contacts.len()).step_by(size_of_chunk) {
+            let end_of_chunk = usize::min(start_of_chunk + size_of_chunk, contacts.len());
+            let chunk_contacts = contacts_arc.clone();
+            let query_clone = query.clone();
+            let results_clone = Arc::clone(&results);
+
+            let handle = thread::spawn(move || {
+                let mut local_results = Vec::new();
+
+                //Each threads going to work!
+                for (i, c) in chunk_contacts[start_of_chunk..end_of_chunk]
+                    .iter()
+                    .enumerate()
+                {
+                    let name_distance = levenshtein(&query_clone, &c.name.to_lowercase());
+                    let email_distance = levenshtein(&query_clone, &c.email.to_lowercase());
+
+                    if name_distance <= max_edits || email_distance <= max_edits {
+                        local_results.push(start_of_chunk + i);
+                    }
+                }
+
+                // Merge partial results
+                let mut global_results = results_clone.lock().unwrap();
+                global_results.extend(local_results);
+            });
+
+            handles.push(handle);
+        }
+
+        // Waiting for all the threads to complete
+        for handle in handles {
+            handle.join().expect("Thread panicked");
+        }
+
+        // Get final results
+        Arc::try_unwrap(results).unwrap().into_inner().unwrap()
     }
 }
