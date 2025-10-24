@@ -83,7 +83,7 @@ enum Commands {
         #[arg(long)]
         domain: Option<String>,
         #[arg(long)]
-        fuzzy: Option<String>
+        fuzzy: Option<String>,
     },
 }
 
@@ -294,9 +294,8 @@ pub fn run_command_cli() -> Result<(), AppError> {
         Commands::Search {
             name,
             domain,
-            fuzzy
+            fuzzy,
         } => {
-
             let name = name.unwrap_or_default();
             let domain = domain.unwrap_or_default();
             let fuzzy = fuzzy.unwrap_or_default();
