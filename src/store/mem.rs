@@ -1,10 +1,15 @@
 #![allow(dead_code)]
 
 use std::{
-    collections::HashMap, fs, path::Path, sync::{Arc, Mutex}, thread
+    collections::HashMap,
+    fs::{self, File},
+    path::Path,
+    sync::{Arc, Mutex},
+    thread,
 };
 
 use chrono::{DateTime, Utc};
+use csv::ReaderBuilder;
 use fuzzy_search::distance::levenshtein;
 
 use crate::{domain::Contact, traits::ContactStore};
@@ -55,6 +60,7 @@ impl Contact {
 
 const JSON_FILE_PATH: &str = "contacts.json";
 const TXT_FILE_PATH: &str = "contacts.txt";
+const CSV_FILE_PATH: &str = "contacts.csv";
 
 #[derive(Debug)]
 pub enum AppError {
@@ -95,6 +101,7 @@ impl ContactStore for FileStore {
     fn load(&self) -> Result<Vec<Contact>, AppError> {
         let path_json = Path::new(JSON_FILE_PATH);
         let path_txt = Path::new(TXT_FILE_PATH);
+        let path_csv = Path::new(CSV_FILE_PATH);
 
         if path_json.exists() {
             let data = fs::read_to_string(path_json)?;
@@ -115,6 +122,18 @@ impl ContactStore for FileStore {
             }
             self.save(&contacts)?;
             println!("Migration contacts.txt -> contact.json successful!");
+            fs::remove_file(TXT_FILE_PATH)?;
+            Ok(contacts)
+        } else if path_csv.exists() {
+            //CSV -> JSON
+            let file = File::open(path_csv)?;
+            let mut rdr = ReaderBuilder::new().from_reader(file);
+            let mut contacts = Vec::new();
+
+            for result in rdr.deserialize() {
+                let contact: Contact = result.map_err(|e| AppError::Parse(e.to_string()))?;
+                contacts.push(contact);
+            }
             Ok(contacts)
         } else {
             Ok(Vec::new())
@@ -144,7 +163,7 @@ impl ContactStore for FileStore {
         }
 
         if !fuzzy.is_empty() {
-                matches.extend(index.fuzzy_search(&fuzzy, &contacts, 2))
+            matches.extend(index.fuzzy_search(&fuzzy, &contacts, 2))
         }
 
         println!("Matches {:?}", matches);
@@ -167,8 +186,6 @@ impl ContactStore for FileStore {
             }
         }
         Ok(matches)
-
-
     }
 }
 
@@ -200,7 +217,7 @@ impl ContactStore for MemStore {
         let contacts = self.load()?;
         let index = ContactsIndex::build(&contacts);
 
-        let mut matches:Vec<usize> = Vec::new();
+        let mut matches: Vec<usize> = Vec::new();
 
         if !name.is_empty() {
             matches.extend(index.lookup_name(&name));

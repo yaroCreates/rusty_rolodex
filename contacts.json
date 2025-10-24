@@ -4,8 +4,8 @@
     "phone": "0692175587777",
     "email": "wendy65@example.com",
     "tags": [],
-    "created_at": "2024-07-25T11:11:41+00:00",
-    "updated_at": "2025-03-27T11:11:41+00:00"
+    "created_at": "2024-07-25T11:11:41Z",
+    "updated_at": "2025-03-27T11:11:41Z"
   },
   {
     "name": "Alice42",
@@ -16,8 +16,8 @@
       "friend",
       "prospect"
     ],
-    "created_at": "2022-10-22T07:31:50+00:00",
-    "updated_at": "2023-02-10T07:31:50+00:00"
+    "created_at": "2022-10-22T07:31:50Z",
+    "updated_at": "2023-02-10T07:31:50Z"
   },
   {
     "name": "Olivia",
@@ -28,16 +28,16 @@
       "client",
       "family"
     ],
-    "created_at": "2020-03-11T07:54:29+00:00",
-    "updated_at": "2020-09-02T07:54:29+00:00"
+    "created_at": "2020-03-11T07:54:29Z",
+    "updated_at": "2020-09-02T07:54:29Z"
   },
   {
     "name": "Eve",
     "phone": "02449810315591",
     "email": "eve@mail.com",
     "tags": [],
-    "created_at": "2022-05-16T15:20:33+00:00",
-    "updated_at": "2022-06-07T15:20:33+00:00"
+    "created_at": "2022-05-16T15:20:33Z",
+    "updated_at": "2022-06-07T15:20:33Z"
   },
   {
     "name": "Victor",
@@ -47,8 +47,8 @@
       "vip",
       "family"
     ],
-    "created_at": "2021-01-16T22:10:44+00:00",
-    "updated_at": "2021-03-01T22:10:44+00:00"
+    "created_at": "2021-01-16T22:10:44Z",
+    "updated_at": "2021-03-01T22:10:44Z"
   },
   {
     "name": "Zane69",
@@ -58,16 +58,16 @@
       "friend",
       "client"
     ],
-    "created_at": "2021-12-02T22:47:37+00:00",
-    "updated_at": "2022-02-18T22:47:37+00:00"
+    "created_at": "2021-12-02T22:47:37Z",
+    "updated_at": "2022-02-18T22:47:37Z"
   },
   {
     "name": "Jack90",
     "phone": "09220996186",
     "email": "jack90@yahoo.com",
     "tags": [],
-    "created_at": "2021-03-22T06:56:34+00:00",
-    "updated_at": "2022-03-02T06:56:34+00:00"
+    "created_at": "2021-03-22T06:56:34Z",
+    "updated_at": "2022-03-02T06:56:34Z"
   },
   {
     "name": "Yara",
@@ -77,16 +77,16 @@
       "prospect",
       "client"
     ],
-    "created_at": "2024-08-15T22:09:07+00:00",
-    "updated_at": "2025-05-30T22:09:07+00:00"
+    "created_at": "2024-08-15T22:09:07Z",
+    "updated_at": "2025-05-30T22:09:07Z"
   },
   {
     "name": "Alice81",
     "phone": "049077869283",
     "email": "alice81@hotmail.com",
     "tags": [],
-    "created_at": "2024-02-22T10:26:42+00:00",
-    "updated_at": "2025-01-10T10:26:42+00:00"
+    "created_at": "2024-02-22T10:26:42Z",
+    "updated_at": "2025-01-10T10:26:42Z"
   },
   {
     "name": "Xander64",
@@ -95,16 +95,16 @@
     "tags": [
       "friend"
     ],
-    "created_at": "2023-07-16T16:02:00+00:00",
-    "updated_at": "2024-02-16T16:02:00+00:00"
+    "created_at": "2023-07-16T16:02:00Z",
+    "updated_at": "2024-02-16T16:02:00Z"
   },
   {
     "name": "Leo",
     "phone": "0714707668802",
     "email": "leo@outlook.com",
     "tags": [],
-    "created_at": "2025-09-14T13:11:59+00:00",
-    "updated_at": "2026-07-09T13:11:59+00:00"
+    "created_at": "2025-09-14T13:11:59Z",
+    "updated_at": "2026-07-09T13:11:59Z"
   },
   {
     "name": "Zane",
@@ -115,8 +115,8 @@
       "vip",
       "prospect"
     ],
-    "created_at": "2021-05-31T06:29:45+00:00",
-    "updated_at": "2022-02-25T06:29:45+00:00"
+    "created_at": "2021-05-31T06:29:45Z",
+    "updated_at": "2022-02-25T06:29:45Z"
   },
   {
     "name": "Jack88",
@@ -125,16 +125,16 @@
     "tags": [
       "work"
     ],
-    "created_at": "2022-03-16T04:03:18+00:00",
-    "updated_at": "2022-08-13T04:03:18+00:00"
+    "created_at": "2022-03-16T04:03:18Z",
+    "updated_at": "2022-08-13T04:03:18Z"
   },
   {
     "name": "Zane",
     "phone": "0293077408004",
     "email": "zane@mail.com",
     "tags": [],
-    "created_at": "2025-08-30T03:56:01+00:00",
-    "updated_at": "2026-02-28T03:56:01+00:00"
+    "created_at": "2025-08-30T03:56:01Z",
+    "updated_at": "2026-02-28T03:56:01Z"
   },
   {
     "name": "Wendy",
@@ -143,8 +143,8 @@
     "tags": [
       "family"
     ],
-    "created_at": "2024-06-30T11:48:11+00:00",
-    "updated_at": "2024-12-12T11:48:11+00:00"
+    "created_at": "2024-06-30T11:48:11Z",
+    "updated_at": "2024-12-12T11:48:11Z"
   },
   {
     "name": "Wendy44",
@@ -155,8 +155,8 @@
       "lead",
       "work"
     ],
-    "created_at": "2025-06-21T09:51:00+00:00",
-    "updated_at": "2026-05-01T09:51:00+00:00"
+    "created_at": "2025-06-21T09:51:00Z",
+    "updated_at": "2026-05-01T09:51:00Z"
   },
   {
     "name": "David",
@@ -165,16 +165,16 @@
     "tags": [
       "vip"
     ],
-    "created_at": "2020-08-02T07:19:25+00:00",
-    "updated_at": "2020-11-02T07:19:25+00:00"
+    "created_at": "2020-08-02T07:19:25Z",
+    "updated_at": "2020-11-02T07:19:25Z"
   },
   {
     "name": "Uma33",
     "phone": "03368400391433",
     "email": "uma33@hotmail.com",
     "tags": [],
-    "created_at": "2020-08-22T01:17:54+00:00",
-    "updated_at": "2020-11-17T01:17:54+00:00"
+    "created_at": "2020-08-22T01:17:54Z",
+    "updated_at": "2020-11-17T01:17:54Z"
   },
   {
     "name": "Wendy",
@@ -183,8 +183,8 @@
     "tags": [
       "lead"
     ],
-    "created_at": "2025-08-15T04:58:26+00:00",
-    "updated_at": "2026-04-18T04:58:26+00:00"
+    "created_at": "2025-08-15T04:58:26Z",
+    "updated_at": "2026-04-18T04:58:26Z"
   },
   {
     "name": "Rachel79",
@@ -195,8 +195,8 @@
       "work",
       "client"
     ],
-    "created_at": "2024-05-28T23:01:49+00:00",
-    "updated_at": "2024-12-14T23:01:49+00:00"
+    "created_at": "2024-05-28T23:01:49Z",
+    "updated_at": "2024-12-14T23:01:49Z"
   },
   {
     "name": "David40",
@@ -207,8 +207,8 @@
       "work",
       "family"
     ],
-    "created_at": "2022-05-29T13:51:48+00:00",
-    "updated_at": "2022-10-18T13:51:48+00:00"
+    "created_at": "2022-05-29T13:51:48Z",
+    "updated_at": "2022-10-18T13:51:48Z"
   },
   {
     "name": "Tina",
@@ -217,8 +217,8 @@
     "tags": [
       "work"
     ],
-    "created_at": "2020-07-14T21:21:01+00:00",
-    "updated_at": "2020-08-21T21:21:01+00:00"
+    "created_at": "2020-07-14T21:21:01Z",
+    "updated_at": "2020-08-21T21:21:01Z"
   },
   {
     "name": "Nathan",
@@ -229,8 +229,8 @@
       "prospect",
       "work"
     ],
-    "created_at": "2024-08-01T07:54:04+00:00",
-    "updated_at": "2025-05-12T07:54:04+00:00"
+    "created_at": "2024-08-01T07:54:04Z",
+    "updated_at": "2025-05-12T07:54:04Z"
   },
   {
     "name": "Wendy",
@@ -239,8 +239,8 @@
     "tags": [
       "prospect"
     ],
-    "created_at": "2024-01-03T15:56:28+00:00",
-    "updated_at": "2024-06-18T15:56:28+00:00"
+    "created_at": "2024-01-03T15:56:28Z",
+    "updated_at": "2024-06-18T15:56:28Z"
   },
   {
     "name": "Tina3",
@@ -249,8 +249,8 @@
     "tags": [
       "friend"
     ],
-    "created_at": "2022-09-05T07:29:00+00:00",
-    "updated_at": "2023-06-09T07:29:00+00:00"
+    "created_at": "2022-09-05T07:29:00Z",
+    "updated_at": "2023-06-09T07:29:00Z"
   },
   {
     "name": "Yara",
@@ -259,16 +259,16 @@
     "tags": [
       "lead"
     ],
-    "created_at": "2024-03-19T07:23:54+00:00",
-    "updated_at": "2024-11-24T07:23:54+00:00"
+    "created_at": "2024-03-19T07:23:54Z",
+    "updated_at": "2024-11-24T07:23:54Z"
   },
   {
     "name": "Quincy72",
     "phone": "0340236350393",
     "email": "quincy72@gmail.com",
     "tags": [],
-    "created_at": "2025-08-30T01:27:00+00:00",
-    "updated_at": "2025-11-30T01:27:00+00:00"
+    "created_at": "2025-08-30T01:27:00Z",
+    "updated_at": "2025-11-30T01:27:00Z"
   },
   {
     "name": "Yara",
@@ -279,16 +279,16 @@
       "friend",
       "work"
     ],
-    "created_at": "2020-08-29T04:35:02+00:00",
-    "updated_at": "2020-11-24T04:35:02+00:00"
+    "created_at": "2020-08-29T04:35:02Z",
+    "updated_at": "2020-11-24T04:35:02Z"
   },
   {
     "name": "Steve66",
     "phone": "079178879217",
     "email": "steve66@example.com",
     "tags": [],
-    "created_at": "2021-10-07T15:35:06+00:00",
-    "updated_at": "2022-01-22T15:35:06+00:00"
+    "created_at": "2021-10-07T15:35:06Z",
+    "updated_at": "2022-01-22T15:35:06Z"
   },
   {
     "name": "Mona7",
@@ -299,8 +299,8 @@
       "work",
       "friend"
     ],
-    "created_at": "2024-02-04T02:06:53+00:00",
-    "updated_at": "2025-01-31T02:06:53+00:00"
+    "created_at": "2024-02-04T02:06:53Z",
+    "updated_at": "2025-01-31T02:06:53Z"
   },
   {
     "name": "Rachel25",
@@ -310,8 +310,8 @@
       "friend",
       "prospect"
     ],
-    "created_at": "2021-11-26T16:23:16+00:00",
-    "updated_at": "2022-05-14T16:23:16+00:00"
+    "created_at": "2021-11-26T16:23:16Z",
+    "updated_at": "2022-05-14T16:23:16Z"
   },
   {
     "name": "Steve",
@@ -321,8 +321,8 @@
       "work",
       "vip"
     ],
-    "created_at": "2022-05-14T10:03:22+00:00",
-    "updated_at": "2022-09-17T10:03:22+00:00"
+    "created_at": "2022-05-14T10:03:22Z",
+    "updated_at": "2022-09-17T10:03:22Z"
   },
   {
     "name": "Wendy",
@@ -331,8 +331,8 @@
     "tags": [
       "vip"
     ],
-    "created_at": "2020-05-12T19:13:01+00:00",
-    "updated_at": "2020-07-20T19:13:01+00:00"
+    "created_at": "2020-05-12T19:13:01Z",
+    "updated_at": "2020-07-20T19:13:01Z"
   },
   {
     "name": "Xander",
@@ -343,8 +343,8 @@
       "vip",
       "lead"
     ],
-    "created_at": "2025-03-08T17:00:43+00:00",
-    "updated_at": "2025-12-31T17:00:43+00:00"
+    "created_at": "2025-03-08T17:00:43Z",
+    "updated_at": "2025-12-31T17:00:43Z"
   },
   {
     "name": "Nathan",
@@ -354,16 +354,16 @@
       "vip",
       "family"
     ],
-    "created_at": "2022-01-26T07:42:25+00:00",
-    "updated_at": "2022-08-17T07:42:25+00:00"
+    "created_at": "2022-01-26T07:42:25Z",
+    "updated_at": "2022-08-17T07:42:25Z"
   },
   {
     "name": "George",
     "phone": "0437368525234",
     "email": "george@hotmail.com",
     "tags": [],
-    "created_at": "2025-06-13T03:36:22+00:00",
-    "updated_at": "2025-12-01T03:36:22+00:00"
+    "created_at": "2025-06-13T03:36:22Z",
+    "updated_at": "2025-12-01T03:36:22Z"
   },
   {
     "name": "Olivia",
@@ -373,16 +373,16 @@
       "work",
       "vip"
     ],
-    "created_at": "2024-12-13T22:53:52+00:00",
-    "updated_at": "2025-04-17T22:53:52+00:00"
+    "created_at": "2024-12-13T22:53:52Z",
+    "updated_at": "2025-04-17T22:53:52Z"
   },
   {
     "name": "Alice",
     "phone": "0839297041037",
     "email": "alice@mail.com",
     "tags": [],
-    "created_at": "2023-09-25T03:03:30+00:00",
-    "updated_at": "2024-01-01T03:03:30+00:00"
+    "created_at": "2023-09-25T03:03:30Z",
+    "updated_at": "2024-01-01T03:03:30Z"
   },
   {
     "name": "Steve",
@@ -392,8 +392,8 @@
       "vip",
       "prospect"
     ],
-    "created_at": "2021-06-14T01:56:45+00:00",
-    "updated_at": "2021-10-10T01:56:45+00:00"
+    "created_at": "2021-06-14T01:56:45Z",
+    "updated_at": "2021-10-10T01:56:45Z"
   },
   {
     "name": "Olivia74",
@@ -403,8 +403,8 @@
       "friend",
       "lead"
     ],
-    "created_at": "2022-07-28T15:00:47+00:00",
-    "updated_at": "2023-02-11T15:00:47+00:00"
+    "created_at": "2022-07-28T15:00:47Z",
+    "updated_at": "2023-02-11T15:00:47Z"
   },
   {
     "name": "Paul",
@@ -415,24 +415,24 @@
       "client",
       "prospect"
     ],
-    "created_at": "2021-07-30T23:06:05+00:00",
-    "updated_at": "2022-06-16T23:06:05+00:00"
+    "created_at": "2021-07-30T23:06:05Z",
+    "updated_at": "2022-06-16T23:06:05Z"
   },
   {
     "name": "Charlie49",
     "phone": "04694561388409",
     "email": "charlie49@gmail.com",
     "tags": [],
-    "created_at": "2021-11-28T00:12:10+00:00",
-    "updated_at": "2022-05-13T00:12:10+00:00"
+    "created_at": "2021-11-28T00:12:10Z",
+    "updated_at": "2022-05-13T00:12:10Z"
   },
   {
     "name": "Rachel56",
     "phone": "08735098531",
     "email": "rachel56@yahoo.com",
     "tags": [],
-    "created_at": "2024-11-07T18:19:03+00:00",
-    "updated_at": "2025-05-25T18:19:03+00:00"
+    "created_at": "2024-11-07T18:19:03Z",
+    "updated_at": "2025-05-25T18:19:03Z"
   },
   {
     "name": "Karen51",
@@ -441,16 +441,16 @@
     "tags": [
       "prospect"
     ],
-    "created_at": "2020-09-19T00:23:22+00:00",
-    "updated_at": "2020-11-04T00:23:22+00:00"
+    "created_at": "2020-09-19T00:23:22Z",
+    "updated_at": "2020-11-04T00:23:22Z"
   },
   {
     "name": "Olivia",
     "phone": "09273995500",
     "email": "olivia@example.com",
     "tags": [],
-    "created_at": "2023-09-11T12:28:22+00:00",
-    "updated_at": "2023-09-24T12:28:22+00:00"
+    "created_at": "2023-09-11T12:28:22Z",
+    "updated_at": "2023-09-24T12:28:22Z"
   },
   {
     "name": "Hannah",
@@ -460,16 +460,16 @@
       "lead",
       "vip"
     ],
-    "created_at": "2020-12-25T18:15:11+00:00",
-    "updated_at": "2021-11-28T18:15:11+00:00"
+    "created_at": "2020-12-25T18:15:11Z",
+    "updated_at": "2021-11-28T18:15:11Z"
   },
   {
     "name": "Alice",
     "phone": "053692830909",
     "email": "alice@yahoo.com",
     "tags": [],
-    "created_at": "2024-03-08T19:19:25+00:00",
-    "updated_at": "2025-01-22T19:19:25+00:00"
+    "created_at": "2024-03-08T19:19:25Z",
+    "updated_at": "2025-01-22T19:19:25Z"
   },
   {
     "name": "David",
@@ -479,16 +479,16 @@
       "friend",
       "work"
     ],
-    "created_at": "2020-11-14T18:25:22+00:00",
-    "updated_at": "2021-05-04T18:25:22+00:00"
+    "created_at": "2020-11-14T18:25:22Z",
+    "updated_at": "2021-05-04T18:25:22Z"
   },
   {
     "name": "Paul",
     "phone": "0232879429557",
     "email": "paul@yahoo.com",
     "tags": [],
-    "created_at": "2020-11-20T20:56:42+00:00",
-    "updated_at": "2021-04-05T20:56:42+00:00"
+    "created_at": "2020-11-20T20:56:42Z",
+    "updated_at": "2021-04-05T20:56:42Z"
   },
   {
     "name": "Karen",
@@ -498,8 +498,8 @@
       "client",
       "prospect"
     ],
-    "created_at": "2024-06-02T00:01:41+00:00",
-    "updated_at": "2024-06-06T00:01:41+00:00"
+    "created_at": "2024-06-02T00:01:41Z",
+    "updated_at": "2024-06-06T00:01:41Z"
   },
   {
     "name": "Eve",
@@ -508,8 +508,8 @@
     "tags": [
       "friend"
     ],
-    "created_at": "2021-11-30T17:48:40+00:00",
-    "updated_at": "2022-05-31T17:48:40+00:00"
+    "created_at": "2021-11-30T17:48:40Z",
+    "updated_at": "2022-05-31T17:48:40Z"
   },
   {
     "name": "Quincy93",
@@ -518,8 +518,8 @@
     "tags": [
       "work"
     ],
-    "created_at": "2021-01-22T08:17:23+00:00",
-    "updated_at": "2021-10-29T08:17:23+00:00"
+    "created_at": "2021-01-22T08:17:23Z",
+    "updated_at": "2021-10-29T08:17:23Z"
   },
   {
     "name": "Charlie",
@@ -530,8 +530,8 @@
       "work",
       "friend"
     ],
-    "created_at": "2021-12-24T03:34:21+00:00",
-    "updated_at": "2022-09-13T03:34:21+00:00"
+    "created_at": "2021-12-24T03:34:21Z",
+    "updated_at": "2022-09-13T03:34:21Z"
   },
   {
     "name": "Tina",
@@ -541,8 +541,8 @@
       "prospect",
       "work"
     ],
-    "created_at": "2024-07-23T03:35:38+00:00",
-    "updated_at": "2024-10-23T03:35:38+00:00"
+    "created_at": "2024-07-23T03:35:38Z",
+    "updated_at": "2024-10-23T03:35:38Z"
   },
   {
     "name": "Wendy19",
@@ -553,8 +553,8 @@
       "client",
       "friend"
     ],
-    "created_at": "2020-03-08T18:05:45+00:00",
-    "updated_at": "2020-11-16T18:05:45+00:00"
+    "created_at": "2020-03-08T18:05:45Z",
+    "updated_at": "2020-11-16T18:05:45Z"
   },
   {
     "name": "Rachel",
@@ -563,8 +563,8 @@
     "tags": [
       "work"
     ],
-    "created_at": "2020-01-03T07:46:13+00:00",
-    "updated_at": "2020-01-28T07:46:13+00:00"
+    "created_at": "2020-01-03T07:46:13Z",
+    "updated_at": "2020-01-28T07:46:13Z"
   },
   {
     "name": "Victor96",
@@ -573,16 +573,16 @@
     "tags": [
       "vip"
     ],
-    "created_at": "2022-04-05T02:57:25+00:00",
-    "updated_at": "2022-11-10T02:57:25+00:00"
+    "created_at": "2022-04-05T02:57:25Z",
+    "updated_at": "2022-11-10T02:57:25Z"
   },
   {
     "name": "Rachel85",
     "phone": "0764847095559",
     "email": "rachel85@mail.com",
     "tags": [],
-    "created_at": "2024-07-19T18:03:25+00:00",
-    "updated_at": "2025-05-22T18:03:25+00:00"
+    "created_at": "2024-07-19T18:03:25Z",
+    "updated_at": "2025-05-22T18:03:25Z"
   },
   {
     "name": "Olivia51",
@@ -591,8 +591,8 @@
     "tags": [
       "family"
     ],
-    "created_at": "2025-03-08T04:38:31+00:00",
-    "updated_at": "2026-01-15T04:38:31+00:00"
+    "created_at": "2025-03-08T04:38:31Z",
+    "updated_at": "2026-01-15T04:38:31Z"
   },
   {
     "name": "Karen",
@@ -603,8 +603,8 @@
       "family",
       "lead"
     ],
-    "created_at": "2023-08-28T23:09:51+00:00",
-    "updated_at": "2024-01-11T23:09:51+00:00"
+    "created_at": "2023-08-28T23:09:51Z",
+    "updated_at": "2024-01-11T23:09:51Z"
   },
   {
     "name": "Mona18",
@@ -615,8 +615,8 @@
       "work",
       "lead"
     ],
-    "created_at": "2024-12-26T02:11:56+00:00",
-    "updated_at": "2025-03-16T02:11:56+00:00"
+    "created_at": "2024-12-26T02:11:56Z",
+    "updated_at": "2025-03-16T02:11:56Z"
   },
   {
     "name": "Jack",
@@ -625,8 +625,8 @@
     "tags": [
       "friend"
     ],
-    "created_at": "2020-02-16T13:25:48+00:00",
-    "updated_at": "2021-01-06T13:25:48+00:00"
+    "created_at": "2020-02-16T13:25:48Z",
+    "updated_at": "2021-01-06T13:25:48Z"
   },
   {
     "name": "Bob29",
@@ -635,8 +635,8 @@
     "tags": [
       "work"
     ],
-    "created_at": "2020-10-29T03:46:39+00:00",
-    "updated_at": "2021-08-13T03:46:39+00:00"
+    "created_at": "2020-10-29T03:46:39Z",
+    "updated_at": "2021-08-13T03:46:39Z"
   },
   {
     "name": "Ivy99",
@@ -647,8 +647,8 @@
       "vip",
       "lead"
     ],
-    "created_at": "2020-03-10T10:36:30+00:00",
-    "updated_at": "2020-12-26T10:36:30+00:00"
+    "created_at": "2020-03-10T10:36:30Z",
+    "updated_at": "2020-12-26T10:36:30Z"
   },
   {
     "name": "Quincy6",
@@ -657,8 +657,8 @@
     "tags": [
       "family"
     ],
-    "created_at": "2022-02-14T00:09:58+00:00",
-    "updated_at": "2022-05-03T00:09:58+00:00"
+    "created_at": "2022-02-14T00:09:58Z",
+    "updated_at": "2022-05-03T00:09:58Z"
   },
   {
     "name": "Zane13",
@@ -669,8 +669,8 @@
       "prospect",
       "vip"
     ],
-    "created_at": "2024-04-27T21:57:13+00:00",
-    "updated_at": "2025-02-08T21:57:13+00:00"
+    "created_at": "2024-04-27T21:57:13Z",
+    "updated_at": "2025-02-08T21:57:13Z"
   },
   {
     "name": "Quincy",
@@ -680,16 +680,16 @@
       "lead",
       "work"
     ],
-    "created_at": "2020-04-29T03:46:02+00:00",
-    "updated_at": "2020-09-11T03:46:02+00:00"
+    "created_at": "2020-04-29T03:46:02Z",
+    "updated_at": "2020-09-11T03:46:02Z"
   },
   {
     "name": "Fiona39",
     "phone": "05983744401",
     "email": "fiona39@gmail.com",
     "tags": [],
-    "created_at": "2022-06-08T18:16:39+00:00",
-    "updated_at": "2022-10-16T18:16:39+00:00"
+    "created_at": "2022-06-08T18:16:39Z",
+    "updated_at": "2022-10-16T18:16:39Z"
   },
   {
     "name": "Fiona54",
@@ -699,8 +699,8 @@
       "work",
       "prospect"
     ],
-    "created_at": "2020-06-17T17:39:24+00:00",
-    "updated_at": "2020-10-13T17:39:24+00:00"
+    "created_at": "2020-06-17T17:39:24Z",
+    "updated_at": "2020-10-13T17:39:24Z"
   },
   {
     "name": "Karen",
@@ -711,8 +711,8 @@
       "work",
       "vip"
     ],
-    "created_at": "2022-11-05T06:53:25+00:00",
-    "updated_at": "2023-01-12T06:53:25+00:00"
+    "created_at": "2022-11-05T06:53:25Z",
+    "updated_at": "2023-01-12T06:53:25Z"
   },
   {
     "name": "Bob74",
@@ -723,8 +723,8 @@
       "family",
       "work"
     ],
-    "created_at": "2022-09-02T06:25:42+00:00",
-    "updated_at": "2022-12-19T06:25:42+00:00"
+    "created_at": "2022-09-02T06:25:42Z",
+    "updated_at": "2022-12-19T06:25:42Z"
   },
   {
     "name": "Paul",
@@ -733,32 +733,32 @@
     "tags": [
       "family"
     ],
-    "created_at": "2020-08-29T11:31:56+00:00",
-    "updated_at": "2021-05-06T11:31:56+00:00"
+    "created_at": "2020-08-29T11:31:56Z",
+    "updated_at": "2021-05-06T11:31:56Z"
   },
   {
     "name": "Paul50",
     "phone": "0162309268316",
     "email": "paul50@gmail.com",
     "tags": [],
-    "created_at": "2020-12-01T13:08:35+00:00",
-    "updated_at": "2021-01-07T13:08:35+00:00"
+    "created_at": "2020-12-01T13:08:35Z",
+    "updated_at": "2021-01-07T13:08:35Z"
   },
   {
     "name": "Mona20",
     "phone": "07422872272453",
     "email": "mona20@example.com",
     "tags": [],
-    "created_at": "2022-08-24T05:48:09+00:00",
-    "updated_at": "2023-05-19T05:48:09+00:00"
+    "created_at": "2022-08-24T05:48:09Z",
+    "updated_at": "2023-05-19T05:48:09Z"
   },
   {
     "name": "Nathan",
     "phone": "0441842771730",
     "email": "nathan@outlook.com",
     "tags": [],
-    "created_at": "2020-02-21T20:45:44+00:00",
-    "updated_at": "2020-05-10T20:45:44+00:00"
+    "created_at": "2020-02-21T20:45:44Z",
+    "updated_at": "2020-05-10T20:45:44Z"
   },
   {
     "name": "Hannah",
@@ -767,8 +767,8 @@
     "tags": [
       "prospect"
     ],
-    "created_at": "2020-07-02T23:28:42+00:00",
-    "updated_at": "2020-11-16T23:28:42+00:00"
+    "created_at": "2020-07-02T23:28:42Z",
+    "updated_at": "2020-11-16T23:28:42Z"
   },
   {
     "name": "Fiona",
@@ -779,16 +779,16 @@
       "vip",
       "lead"
     ],
-    "created_at": "2023-01-31T10:34:03+00:00",
-    "updated_at": "2023-07-08T10:34:03+00:00"
+    "created_at": "2023-01-31T10:34:03Z",
+    "updated_at": "2023-07-08T10:34:03Z"
   },
   {
     "name": "Yara",
     "phone": "012901859958",
     "email": "yara@yahoo.com",
     "tags": [],
-    "created_at": "2022-02-26T18:01:45+00:00",
-    "updated_at": "2022-06-02T18:01:45+00:00"
+    "created_at": "2022-02-26T18:01:45Z",
+    "updated_at": "2022-06-02T18:01:45Z"
   },
   {
     "name": "Eve93",
@@ -799,8 +799,8 @@
       "friend",
       "client"
     ],
-    "created_at": "2022-11-14T12:12:34+00:00",
-    "updated_at": "2023-01-02T12:12:34+00:00"
+    "created_at": "2022-11-14T12:12:34Z",
+    "updated_at": "2023-01-02T12:12:34Z"
   },
   {
     "name": "Eve61",
@@ -811,8 +811,8 @@
       "friend",
       "prospect"
     ],
-    "created_at": "2021-12-19T08:14:06+00:00",
-    "updated_at": "2022-09-20T08:14:06+00:00"
+    "created_at": "2021-12-19T08:14:06Z",
+    "updated_at": "2022-09-20T08:14:06Z"
   },
   {
     "name": "David",
@@ -822,8 +822,8 @@
       "client",
       "friend"
     ],
-    "created_at": "2023-05-24T10:31:34+00:00",
-    "updated_at": "2023-06-06T10:31:34+00:00"
+    "created_at": "2023-05-24T10:31:34Z",
+    "updated_at": "2023-06-06T10:31:34Z"
   },
   {
     "name": "Wendy51",
@@ -834,8 +834,8 @@
       "work",
       "prospect"
     ],
-    "created_at": "2020-10-10T18:48:04+00:00",
-    "updated_at": "2020-12-06T18:48:04+00:00"
+    "created_at": "2020-10-10T18:48:04Z",
+    "updated_at": "2020-12-06T18:48:04Z"
   },
   {
     "name": "Bob35",
@@ -846,16 +846,16 @@
       "lead",
       "vip"
     ],
-    "created_at": "2022-10-21T07:00:30+00:00",
-    "updated_at": "2023-05-01T07:00:30+00:00"
+    "created_at": "2022-10-21T07:00:30Z",
+    "updated_at": "2023-05-01T07:00:30Z"
   },
   {
     "name": "Mona54",
     "phone": "00140590846",
     "email": "mona54@hotmail.com",
     "tags": [],
-    "created_at": "2022-09-09T20:27:17+00:00",
-    "updated_at": "2023-06-28T20:27:17+00:00"
+    "created_at": "2022-09-09T20:27:17Z",
+    "updated_at": "2023-06-28T20:27:17Z"
   },
   {
     "name": "Alice",
@@ -865,8 +865,8 @@
       "family",
       "lead"
     ],
-    "created_at": "2022-08-10T18:38:38+00:00",
-    "updated_at": "2023-02-15T18:38:38+00:00"
+    "created_at": "2022-08-10T18:38:38Z",
+    "updated_at": "2023-02-15T18:38:38Z"
   },
   {
     "name": "Fiona",
@@ -876,8 +876,8 @@
       "lead",
       "work"
     ],
-    "created_at": "2021-01-18T00:35:41+00:00",
-    "updated_at": "2021-02-01T00:35:41+00:00"
+    "created_at": "2021-01-18T00:35:41Z",
+    "updated_at": "2021-02-01T00:35:41Z"
   },
   {
     "name": "Bob54",
@@ -888,8 +888,8 @@
       "client",
       "work"
     ],
-    "created_at": "2021-05-26T12:08:56+00:00",
-    "updated_at": "2021-12-17T12:08:56+00:00"
+    "created_at": "2021-05-26T12:08:56Z",
+    "updated_at": "2021-12-17T12:08:56Z"
   },
   {
     "name": "Fiona",
@@ -898,8 +898,8 @@
     "tags": [
       "family"
     ],
-    "created_at": "2022-07-17T10:44:59+00:00",
-    "updated_at": "2023-06-26T10:44:59+00:00"
+    "created_at": "2022-07-17T10:44:59Z",
+    "updated_at": "2023-06-26T10:44:59Z"
   },
   {
     "name": "Nathan39",
@@ -910,8 +910,8 @@
       "family",
       "prospect"
     ],
-    "created_at": "2024-01-07T16:38:57+00:00",
-    "updated_at": "2024-06-12T16:38:57+00:00"
+    "created_at": "2024-01-07T16:38:57Z",
+    "updated_at": "2024-06-12T16:38:57Z"
   },
   {
     "name": "Jack6",
@@ -921,16 +921,16 @@
       "vip",
       "work"
     ],
-    "created_at": "2022-09-25T17:19:42+00:00",
-    "updated_at": "2023-06-29T17:19:42+00:00"
+    "created_at": "2022-09-25T17:19:42Z",
+    "updated_at": "2023-06-29T17:19:42Z"
   },
   {
     "name": "Eve",
     "phone": "0633910374224",
     "email": "eve@mail.com",
     "tags": [],
-    "created_at": "2021-01-03T13:57:17+00:00",
-    "updated_at": "2021-05-02T13:57:17+00:00"
+    "created_at": "2021-01-03T13:57:17Z",
+    "updated_at": "2021-05-02T13:57:17Z"
   },
   {
     "name": "Leo28",
@@ -940,16 +940,16 @@
       "friend",
       "lead"
     ],
-    "created_at": "2025-09-18T17:23:13+00:00",
-    "updated_at": "2025-09-27T17:23:13+00:00"
+    "created_at": "2025-09-18T17:23:13Z",
+    "updated_at": "2025-09-27T17:23:13Z"
   },
   {
     "name": "Uma",
     "phone": "08791284147",
     "email": "uma@gmail.com",
     "tags": [],
-    "created_at": "2023-06-08T12:38:33+00:00",
-    "updated_at": "2024-05-12T12:38:33+00:00"
+    "created_at": "2023-06-08T12:38:33Z",
+    "updated_at": "2024-05-12T12:38:33Z"
   },
   {
     "name": "Ivy",
@@ -960,8 +960,8 @@
       "lead",
       "work"
     ],
-    "created_at": "2020-01-06T05:44:08+00:00",
-    "updated_at": "2020-06-24T05:44:08+00:00"
+    "created_at": "2020-01-06T05:44:08Z",
+    "updated_at": "2020-06-24T05:44:08Z"
   },
   {
     "name": "Charlie",
@@ -971,8 +971,8 @@
       "lead",
       "prospect"
     ],
-    "created_at": "2024-01-21T23:48:43+00:00",
-    "updated_at": "2024-10-10T23:48:43+00:00"
+    "created_at": "2024-01-21T23:48:43Z",
+    "updated_at": "2024-10-10T23:48:43Z"
   },
   {
     "name": "Charlie",
@@ -982,8 +982,8 @@
       "vip",
       "prospect"
     ],
-    "created_at": "2022-10-22T00:12:39+00:00",
-    "updated_at": "2023-04-04T00:12:39+00:00"
+    "created_at": "2022-10-22T00:12:39Z",
+    "updated_at": "2023-04-04T00:12:39Z"
   },
   {
     "name": "Charlie92",
@@ -994,8 +994,8 @@
       "lead",
       "vip"
     ],
-    "created_at": "2024-01-08T20:07:17+00:00",
-    "updated_at": "2024-12-01T20:07:17+00:00"
+    "created_at": "2024-01-08T20:07:17Z",
+    "updated_at": "2024-12-01T20:07:17Z"
   },
   {
     "name": "Zane30",
@@ -1005,8 +1005,8 @@
       "client",
       "lead"
     ],
-    "created_at": "2022-02-02T01:43:34+00:00",
-    "updated_at": "2022-09-01T01:43:34+00:00"
+    "created_at": "2022-02-02T01:43:34Z",
+    "updated_at": "2022-09-01T01:43:34Z"
   },
   {
     "name": "Leo24",
@@ -1017,15 +1017,15 @@
       "friend",
       "client"
     ],
-    "created_at": "2021-07-17T05:32:47+00:00",
-    "updated_at": "2022-01-11T05:32:47+00:00"
+    "created_at": "2021-07-17T05:32:47Z",
+    "updated_at": "2022-01-11T05:32:47Z"
   },
   {
     "name": "Steve52",
     "phone": "03020638025",
     "email": "steve52@gmail.com",
     "tags": [],
-    "created_at": "2023-03-24T13:08:24+00:00",
-    "updated_at": "2024-01-07T13:08:24+00:00"
+    "created_at": "2023-03-24T13:08:24Z",
+    "updated_at": "2024-01-07T13:08:24Z"
   }
 ]
