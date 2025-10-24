@@ -21,5 +21,30 @@ pub struct ContactsIndex {
 ```
 
 ## Benchmarking
-### - Name lookup
+###  Name lookup
 
+
+| **Name Lookup** | **10k** | **50k** | **100K** |
+|:-------------|:----------:|--------:|:---------|
+| Citerion     | 39.144 ns  | 39.655 ns | 39.522 ns 
+| std::time    | 2.661 µs   | 2.498µs  | 2.442µs
+
+### Domain Lookup
+| **Email Lookup** | **10k** | **50k** | **100K** |
+|:-------------|:----------:|--------:|:---------|
+| Citerion     | 41.665 ns         | 41.049 ns  | 42.956 ns
+| std::time    | 27.554 µs         | 152.51µs  | 280.362µs
+
+
+### Fuzzy Search
+| **Fuzzy Search** | **10k** | **50k** | **100K** |
+|:-------------|:----------:|--------:|:---------|
+| Citerion     | 23.708 ms         | 115.46 ms  | 241.22 ms
+| std::time    | 625.84 ms         | 3.33 s  | 6.76 s
+
+
+### Fuzzy Search with Concurrency
+| **Fuzzy Search(C)** | **10k** | **50k** | **100K** |
+|:-------------|:----------:|-----------:|:---------|
+| Citerion     | 10.691 ms         | 53.167 ms  | 95.945 ms
+| std::time    | 133.36 ms         | 673.19 ms  | 1.37 s

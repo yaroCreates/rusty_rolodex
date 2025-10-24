@@ -16,6 +16,18 @@ fn bench_fuzzy_search(c: &mut Criterion) {
 
     let index = ContactsIndex::build(&contacts);
 
+    c.bench_function("name_lookup", |b| {
+        b.iter(|| {
+            let _ = index.lookup_name("mail.com");
+        })
+    });
+
+    c.bench_function("domain_lookup", |b| {
+        b.iter(|| {
+            let _ = index.lookup_domain("Person1234");
+        })
+    });
+
     c.bench_function("fuzzy_search", |b| {
         b.iter(|| {
             let _ = index.fuzzy_search("Person1234", &contacts, 2);
