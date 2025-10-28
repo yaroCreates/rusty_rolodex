@@ -465,10 +465,10 @@ pub enum MergePolicy {
 }
 
 impl MergePolicy {
-    pub fn from_str(s: &str) -> Self {
+    pub fn policy_check(s: &str) -> Self {
         match s.to_lowercase().as_str() {
             "overwrite" => MergePolicy::Overwrite,
-            "duplication" => MergePolicy::Duplicate,
+            "duplicate" => MergePolicy::Duplicate,
             _ => MergePolicy::Keep,
         }
     }

@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use std::env;
 
 use crate::domain::{Contact, Contacts, export_csv, import_csv};
-use crate::store::mem::{AppError, FileStore, MemStore};
+use crate::store::mem::{AppError, FileStore, MemStore, MergePolicy};
 use crate::traits::ContactStore;
 use crate::validation::{
     ValidationResponse, check_contact_exist, validate_email, validate_name, validate_phone_number,
@@ -84,6 +84,12 @@ enum Commands {
         domain: Option<String>,
         #[arg(long)]
         fuzzy: Option<String>,
+    },
+    Sync {
+        #[arg(long)]
+        file: String,
+        #[arg(long, default_value = "keep")]
+        policy: String,
     },
 }
 
@@ -301,6 +307,11 @@ pub fn run_command_cli() -> Result<(), AppError> {
             let fuzzy = fuzzy.unwrap_or_default();
 
             let _details = store.search(name, domain, fuzzy)?;
+        }
+        Commands::Sync { file, policy } => {
+            let merge_policy = MergePolicy::policy_check(&policy);
+            store.merge_from_file(&file, merge_policy)?;
+            println!("✅ Sync complete using policy: {}", policy);
         }
     }
 
