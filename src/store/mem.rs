@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fs::{self, File},
     path::Path,
     sync::{Arc, Mutex},
@@ -187,6 +187,51 @@ impl ContactStore for FileStore {
         }
         Ok(matches)
     }
+    fn merge_from_file(&self, other_path: &str, policy: MergePolicy) -> Result<(), AppError> {
+        let mut existing_contacts = self.load()?;
+        let data = fs::read_to_string(other_path)?;
+
+        let imported_contacts: Vec<Contact> = serde_json::from_str(&data)
+            .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
+
+        let mut existing_keys: HashSet<(String, String)> = existing_contacts
+            .iter()
+            .map(|c| (c.name.clone(), c.email.clone()))
+            .collect();
+
+        for mut contact in imported_contacts {
+            let key = (contact.name.clone(), contact.email.clone());
+
+            match policy {
+                MergePolicy::Keep => {
+                    if existing_keys.contains(&key) {
+                        continue;
+
+                    } else {
+                        existing_keys.insert(key);
+                        existing_contacts.push(contact);
+                    }
+                }
+                MergePolicy::Overwrite => {
+                    if let Some(pos) = existing_contacts.iter().position(|c|c.name == key.0 && c.email == key.1) {
+                        existing_contacts[pos] = contact;
+                    } else {
+                        existing_contacts.push(contact);
+                    }
+                }
+                MergePolicy::Duplicate => {
+                    if existing_keys.contains(&key) {
+
+                        contact.name = format!("{} (dup)", contact.name);
+                    }
+                    existing_keys.insert((contact.name.clone(), contact.email.clone()));
+                    existing_contacts.push(contact);
+                }
+            }
+        }
+        self.save(&existing_contacts)?;
+        Ok(())
+    }
 }
 
 //Memory storage
@@ -251,6 +296,51 @@ impl ContactStore for MemStore {
             }
         }
         Ok(matches)
+    }
+    fn merge_from_file(&self, other_path: &str, policy: MergePolicy) -> Result<(), AppError> {
+        let mut existing_contacts = self.load()?;
+        let data = fs::read_to_string(other_path)?;
+
+        let imported_contacts: Vec<Contact> = serde_json::from_str(&data)
+            .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
+
+        let mut existing_keys: HashSet<(String, String)> = existing_contacts
+            .iter()
+            .map(|c| (c.name.clone(), c.email.clone()))
+            .collect();
+
+        for mut contact in imported_contacts {
+            let key = (contact.name.clone(), contact.email.clone());
+
+            match policy {
+                MergePolicy::Keep => {
+                    if existing_keys.contains(&key) {
+                        continue;
+
+                    } else {
+                        existing_keys.insert(key);
+                        existing_contacts.push(contact);
+                    }
+                }
+                MergePolicy::Overwrite => {
+                    if let Some(pos) = existing_contacts.iter().position(|c|c.name == key.0 && c.email == key.1) {
+                        existing_contacts[pos] = contact;
+                    } else {
+                        existing_contacts.push(contact);
+                    }
+                }
+                MergePolicy::Duplicate => {
+                    if existing_keys.contains(&key) {
+
+                        contact.name = format!("{} (dup)", contact.name);
+                    }
+                    existing_keys.insert((contact.name.clone(), contact.email.clone()));
+                    existing_contacts.push(contact);
+                }
+            }
+        }
+        self.save(&existing_contacts)?;
+        Ok(())
     }
 }
 
@@ -364,5 +454,22 @@ impl ContactsIndex {
 
         // Get final results
         Arc::try_unwrap(results).unwrap().into_inner().unwrap()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum MergePolicy {
+    Keep,
+    Overwrite,
+    Duplicate,
+}
+
+impl MergePolicy {
+    pub fn from_str(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "overwrite" => MergePolicy::Overwrite,
+            "duplication" => MergePolicy::Duplicate,
+            _ => MergePolicy::Keep,
+        }
     }
 }
