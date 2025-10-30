@@ -207,20 +207,21 @@ impl ContactStore for FileStore {
             if existing_keys.contains(&key) {
                 duplicate_count += 1;
             }
-            
 
             match policy {
                 MergePolicy::Keep => {
                     if existing_keys.contains(&key) {
                         continue;
-
                     } else {
                         existing_keys.insert(key);
                         existing_contacts.push(contact);
                     }
                 }
                 MergePolicy::Overwrite => {
-                    if let Some(pos) = existing_contacts.iter().position(|c|c.name == key.0 && c.email == key.1) {
+                    if let Some(pos) = existing_contacts
+                        .iter()
+                        .position(|c| c.name == key.0 && c.email == key.1)
+                    {
                         existing_contacts[pos] = contact;
                     } else {
                         existing_contacts.push(contact);
@@ -228,7 +229,6 @@ impl ContactStore for FileStore {
                 }
                 MergePolicy::Duplicate => {
                     if existing_keys.contains(&key) {
-
                         contact.name = format!("{} (dup) ({})", contact.name, duplicate_count + 1);
                     }
                     existing_keys.insert((contact.name.clone(), contact.email.clone()));
@@ -323,14 +323,16 @@ impl ContactStore for MemStore {
                 MergePolicy::Keep => {
                     if existing_keys.contains(&key) {
                         continue;
-
                     } else {
                         existing_keys.insert(key);
                         existing_contacts.push(contact);
                     }
                 }
                 MergePolicy::Overwrite => {
-                    if let Some(pos) = existing_contacts.iter().position(|c|c.name == key.0 && c.email == key.1) {
+                    if let Some(pos) = existing_contacts
+                        .iter()
+                        .position(|c| c.name == key.0 && c.email == key.1)
+                    {
                         existing_contacts[pos] = contact;
                     } else {
                         existing_contacts.push(contact);
@@ -338,7 +340,6 @@ impl ContactStore for MemStore {
                 }
                 MergePolicy::Duplicate => {
                     if existing_keys.contains(&key) {
-
                         contact.name = format!("{} (dup)", contact.name);
                     }
                     existing_keys.insert((contact.name.clone(), contact.email.clone()));
