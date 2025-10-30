@@ -199,8 +199,15 @@ impl ContactStore for FileStore {
             .map(|c| (c.name.clone(), c.email.clone()))
             .collect();
 
+        let mut duplicate_count = 0;
+
         for mut contact in imported_contacts {
             let key = (contact.name.clone(), contact.email.clone());
+
+            if existing_keys.contains(&key) {
+                duplicate_count += 1;
+            }
+            
 
             match policy {
                 MergePolicy::Keep => {
@@ -222,7 +229,7 @@ impl ContactStore for FileStore {
                 MergePolicy::Duplicate => {
                     if existing_keys.contains(&key) {
 
-                        contact.name = format!("{} (dup)", contact.name);
+                        contact.name = format!("{} (dup) ({})", contact.name, duplicate_count + 1);
                     }
                     existing_keys.insert((contact.name.clone(), contact.email.clone()));
                     existing_contacts.push(contact);

@@ -309,7 +309,18 @@ pub fn run_command_cli() -> Result<(), AppError> {
             let _details = store.search(name, domain, fuzzy)?;
         }
         Commands::Sync { file, policy } => {
-            let merge_policy = MergePolicy::policy_check(&policy);
+            let merge_policy = match policy.as_str() {
+                "keep" => MergePolicy::Keep,
+                "overwrite" => MergePolicy::Overwrite,
+                "duplicate" => MergePolicy::Duplicate,
+                _ => {
+                    eprintln!(
+                        "❌ Invalid policy '{}'. Use: keep | overwrite | duplicate",
+                        policy
+                    );
+                    return Ok(());
+                }
+            };
             store.merge_from_file(&file, merge_policy)?;
             println!("✅ Sync complete using policy: {}", policy);
         }
