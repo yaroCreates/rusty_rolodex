@@ -10,7 +10,7 @@ use csv::{ReaderBuilder, Writer};
 use fuzzy_search::distance::levenshtein;
 use serde::{Deserialize, Serialize};
 
-use crate::prelude::AppError;
+use crate::{domain, prelude::AppError, validation::check_contact_exist};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
@@ -27,12 +27,26 @@ pub struct Contact {
 
 #[derive(Debug)]
 pub struct Contacts {
-    items: Vec<Contact>,
+    pub items: Vec<Contact>,
+    index: ContactsIndex,
 }
+
+// impl Iterator for Contacts {
+//     type Item = &Contact;
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         self.items.next()
+//     }
+// }
 
 impl Contacts {
     pub fn new(items: Vec<Contact>) -> Self {
-        Self { items }
+        let build_index = ContactsIndex::build(&items);
+
+        Self {
+            items,
+            index: build_index,
+        }
     }
 
     pub fn iter(&'_ self) -> ContactsIter<'_> {
@@ -40,20 +54,46 @@ impl Contacts {
             inner: self.items.iter(),
         }
     }
+    pub fn add(&mut self, contact: Contact) -> Result<(), AppError> {
+        if self.check_contact_exist(&contact) {
+            return Err(AppError::Validation(
+                "Contact with info already exists".to_string(),
+            ));
+        }
+        println!("Index: {:?}", self.index);
+        self.items.push(contact);
+
+        let contact_index = self.items.len() - 1;
+
+        let name_key = self.items[contact_index].name.to_lowercase();
+        let domain_key = self.items[contact_index].email.split("@").nth(1).unwrap_or_default().to_string();
+
+        if let Some(indexes) = self.index.name_map.get_mut(&name_key) {
+            indexes.push(contact_index);
+
+        } else {
+            self.index.name_map.insert(name_key, vec![contact_index]);
+        }
+
+        if let Some(indexes) = self.index.domain_map.get_mut(&domain_key) {
+            indexes.push(contact_index);
+
+        } else {
+            self.index.domain_map.insert(domain_key, vec![contact_index]);
+        }
+        println!("Name index after: {:?}", self.index.name_map);
+        println!("Domain index after: {:?}", self.index.domain_map);
+        Ok(())
+    }
+
+    pub fn check_contact_exist(&self, new_contact: &Contact) -> bool {
+        check_contact_exist(new_contact, &self.items)
+    }
 
     // Returns a read-only slice of all contacts.
     pub fn as_slice(&self) -> &[Contact] {
         &self.items
     }
-
-    // Returns a filtered view as a slice (no clones).
-    // pub fn filter_by_tag<'a>(&'a self, tag: &str) -> Vec<&'a Contact> {
-    //     self.items.iter().filter(|c| c.has_tag(tag)).collect()
-    // }
-
-    // pub fn filter_by_domain<'a>(&'a self, domain: &str) -> Vec<&'a Contact> {
-    //     self.items.iter().filter(|c| c.has_domain(domain)).collect()
-    // }
 }
 
 //Return type

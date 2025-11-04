@@ -107,6 +107,9 @@ pub fn run_command_cli() -> Result<(), AppError> {
     let cli = Cli::parse();
     let store = get_store();
 
+    let mut contacts = Contacts::new(store.load()?);
+
+
     match cli.command {
         Commands::Add {
             name,
@@ -128,24 +131,13 @@ pub fn run_command_cli() -> Result<(), AppError> {
                 ));
             }
 
-            let mut contacts = store.load()?;
+            // let mut contacts = store.load()?;
             let new_contact =
                 Contact::new(&name, &phone, &email, tags.clone(), Utc::now(), Utc::now());
 
-            if check_contact_exist(&new_contact, &contacts) {
-                return Err(AppError::Validation(
-                    "Contact with info already exists".to_string(),
-                ));
-            }
-            contacts.push(Contact::new(
-                &name,
-                &phone,
-                &email,
-                tags,
-                Utc::now(),
-                Utc::now(),
-            ));
-            store.save(&contacts)?;
+            
+            contacts.add(new_contact)?;
+            store.save(&contacts.items)?;
             println!("✅ Added contact: {} ({})", name, email);
         }
         Commands::List { sort, tag, domain } => {
