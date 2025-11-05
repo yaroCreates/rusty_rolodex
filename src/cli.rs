@@ -174,41 +174,10 @@ pub fn run_command_cli() -> Result<(), AppError> {
             }
         }
         Commands::Delete { name, phone } => {
-            //Checking for duplicates
-            let mut check_duplicates = store.load()?;
-            check_duplicates.retain(|c| c.name == name);
+            contacts.delete(name, phone)?;
+            store.save(&contacts.items)?;
 
-            let phone = phone.unwrap_or_default();
 
-            if check_duplicates.len() > 1 {
-                if phone.is_empty() {
-                    return Err(AppError::Parse(String::from(
-                        "There are more than one contact with the name. Please provide the phone number to continue the action",
-                    )));
-                } else {
-                    let mut contacts = store.load()?;
-                    let len_before = contacts.len();
-                    contacts.retain(|c| c.phone != phone);
-
-                    if contacts.len() < len_before {
-                        store.save(&contacts)?;
-                        println!("🗑️ Removed contact: {} - {}", name, phone);
-                    } else {
-                        println!("⚠️ No contact found with name '{}'", name);
-                    }
-                }
-            } else {
-                let mut contacts = store.load()?;
-                let len_before = contacts.len();
-                contacts.retain(|c| c.name != name);
-
-                if contacts.len() < len_before {
-                    store.save(&contacts)?;
-                    println!("🗑️ Removed contact: {}", name);
-                } else {
-                    println!("⚠️ No contact found with name '{}'", name);
-                }
-            }
         }
         Commands::Update {
             name,

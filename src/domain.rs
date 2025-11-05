@@ -10,7 +10,11 @@ use csv::{ReaderBuilder, Writer};
 use fuzzy_search::distance::levenshtein;
 use serde::{Deserialize, Serialize};
 
-use crate::{domain, prelude::AppError, validation::check_contact_exist};
+use crate::{
+    domain,
+    prelude::AppError,
+    validation::{check_contact_duplicates, check_contact_exist},
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
@@ -66,20 +70,73 @@ impl Contacts {
         let contact_index = self.items.len() - 1;
 
         let name_key = self.items[contact_index].name.to_lowercase();
-        let domain_key = self.items[contact_index].email.split("@").nth(1).unwrap_or_default().to_string();
+        let domain_key = self.items[contact_index]
+            .email
+            .split("@")
+            .nth(1)
+            .unwrap_or_default()
+            .to_string();
 
         if let Some(indexes) = self.index.name_map.get_mut(&name_key) {
             indexes.push(contact_index);
-
         } else {
             self.index.name_map.insert(name_key, vec![contact_index]);
         }
 
         if let Some(indexes) = self.index.domain_map.get_mut(&domain_key) {
             indexes.push(contact_index);
-
         } else {
-            self.index.domain_map.insert(domain_key, vec![contact_index]);
+            self.index
+                .domain_map
+                .insert(domain_key, vec![contact_index]);
+        }
+        println!("Name index after: {:?}", self.index.name_map);
+        println!("Domain index after: {:?}", self.index.domain_map);
+        Ok(())
+    }
+
+    pub fn delete(&mut self, name: String, phone: Option<String>) -> Result<(), AppError> {
+        let phone = phone.unwrap_or_default();
+
+        let name_indexes = self
+            .index
+            .name_map
+            .get(&name.to_lowercase())
+            .cloned()
+            .unwrap_or_default();
+        println!("name_keys: {:?}", name_indexes);
+
+        if name_indexes.is_empty() {
+            println!("⚠️ No contact found with name '{}'", name);
+            return Ok(());
+        }
+
+        if self.check_contact_duplicates(name.clone()) {
+            if phone.is_empty() {
+                return Err(AppError::Parse(String::from(
+                    "There are more than one contact with the name. Please provide the phone number to continue the action",
+                )));
+            } if let Some(index) = self
+            .items
+            .iter()
+            .position(|c| c.name.eq_ignore_ascii_case(&name) && c.phone == phone)
+        {
+            self.delete_contact_and_update_indexes(index, &name);
+            println!("🗑️ Removed contact: {} - {}", name, phone);
+        } else {
+            println!("⚠️ No contact found with name '{}' and phone '{}'", name, phone);
+        }
+        } else {
+            if let Some(index) = self
+            .items
+            .iter()
+            .position(|c| c.name.eq_ignore_ascii_case(&name))
+        {
+            self.delete_contact_and_update_indexes(index, &name);
+            println!("🗑️ Removed contact: {}", name);
+        } else {
+            println!("⚠️ No contact found with name '{}'", name);
+        }
         }
         println!("Name index after: {:?}", self.index.name_map);
         println!("Domain index after: {:?}", self.index.domain_map);
@@ -89,6 +146,49 @@ impl Contacts {
     pub fn check_contact_exist(&self, new_contact: &Contact) -> bool {
         check_contact_exist(new_contact, &self.items)
     }
+
+    pub fn check_contact_duplicates(&self, name: String) -> bool {
+        check_contact_duplicates(name, self.items.clone())
+    }
+
+    fn delete_contact_and_update_indexes(&mut self, index: usize, name_key: &str) {
+        let domain_key = self.items[index]
+            .email
+            .split('@')
+            .nth(1)
+            .unwrap_or_default()
+            .to_lowercase();
+    
+        //Remove the contact itself
+        self.items.remove(index);
+    
+        //Updating the name_map indexes
+        if let Some(indices) = self.index.name_map.get_mut(name_key) {
+            indices.retain(|&i| i != index);
+            for i in indices.iter_mut() {
+                if *i > index {
+                    *i -= 1; 
+                }
+            }
+            if indices.is_empty() {
+                self.index.name_map.remove(name_key);
+            }
+        }
+    
+        // Update domain_map indexes
+        if let Some(indices) = self.index.domain_map.get_mut(&domain_key) {
+            indices.retain(|&i| i != index);
+            for i in indices.iter_mut() {
+                if *i > index {
+                    *i -= 1;
+                }
+            }
+            if indices.is_empty() {
+                self.index.domain_map.remove(&domain_key);
+            }
+        }
+    }
+    
 
     // Returns a read-only slice of all contacts.
     pub fn as_slice(&self) -> &[Contact] {

@@ -25,6 +25,14 @@ pub fn check_contact_exist(contact: &Contact, contact_list: &[Contact]) -> bool 
         && contact_list.iter().any(|c| c.phone == contact.phone)
 }
 
+pub fn check_contact_duplicates(name: String, mut contact_list: Vec<Contact>) -> bool {
+    // let contacts = vec![contact_list];
+    // contacts.retain(|c| );
+
+    contact_list.retain(|c| c.name == name);
+    return contact_list.len() > 1;
+}
+
 pub fn validate_name(name: &str) -> bool {
     !name.trim().is_empty() && name.chars().all(|c| c.is_alphabetic() || c.is_whitespace())
 }
