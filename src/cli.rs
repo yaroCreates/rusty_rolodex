@@ -187,64 +187,8 @@ pub fn run_command_cli() -> Result<(), AppError> {
             new_phone,
             new_email,
         } => {
-            if !validate_name(&name) {
-                return Err(AppError::Validation(ValidationResponse::check_name()));
-            }
-
-            if !validate_phone_number(&phone) {
-                return Err(AppError::Validation(
-                    ValidationResponse::check_phone_number(),
-                ));
-            }
-
-            //validation for new data -> Update
-            let new_name = new_name.unwrap_or_default();
-            let new_phone = new_phone.unwrap_or_default();
-            let new_email = new_email.unwrap_or_default();
-
-            let mut contacts = store.load()?;
-
-            if let Some(contact) = contacts
-                .iter_mut()
-                .find(|c| c.name == name && c.phone == phone)
-            {
-                if !new_name.is_empty() {
-                    if !validate_name(&new_name) {
-                        return Err(AppError::Validation("New name is Invalid".to_string()));
-                    }
-                    contact.name = new_name.clone();
-                }
-
-                if !new_phone.is_empty() {
-                    if !validate_phone_number(&new_phone) {
-                        return Err(AppError::Validation(
-                            "New phone number is Invalid".to_string(),
-                        ));
-                    }
-                    contact.phone = new_phone.clone();
-                }
-
-                if !new_email.is_empty() {
-                    if !validate_email(&new_email) {
-                        return Err(AppError::Validation("New email is Invalid".to_string()));
-                    }
-                    contact.email = new_email.clone();
-                }
-                contact.tags = tags;
-                contact.updated_at = Utc::now();
-
-                store.save(&contacts)?;
-
-                println!(
-                    "✅ Contact updated: {} - {} ->  {} - {} - {}",
-                    name, phone, new_name, new_phone, new_email
-                );
-            } else {
-                return Err(AppError::Parse(format!(
-                    "Contact with name '{}' and phone '{}' not found",
-                    name, phone
-                )));
-            }
+            contacts.update(name, phone, tags, new_name, new_phone, new_email)?;
+            store.save(&contacts.items)?;
         }
         Commands::ExportCsv { path } => {
             let contacts = store.load()?;

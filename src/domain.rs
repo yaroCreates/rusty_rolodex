@@ -13,7 +13,10 @@ use serde::{Deserialize, Serialize};
 use crate::{
     domain,
     prelude::AppError,
-    validation::{check_contact_duplicates, check_contact_exist},
+    validation::{
+        ValidationResponse, check_contact_duplicates, check_contact_exist, validate_email,
+        validate_name, validate_phone_number,
+    },
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -116,30 +119,127 @@ impl Contacts {
                 return Err(AppError::Parse(String::from(
                     "There are more than one contact with the name. Please provide the phone number to continue the action",
                 )));
-            } if let Some(index) = self
-            .items
-            .iter()
-            .position(|c| c.name.eq_ignore_ascii_case(&name) && c.phone == phone)
-        {
-            self.delete_contact_and_update_indexes(index, &name);
-            println!("🗑️ Removed contact: {} - {}", name, phone);
-        } else {
-            println!("⚠️ No contact found with name '{}' and phone '{}'", name, phone);
-        }
+            }
+            if let Some(index) = self
+                .items
+                .iter()
+                .position(|c| c.name.eq_ignore_ascii_case(&name) && c.phone == phone)
+            {
+                self.delete_contact_and_update_indexes(index, &name);
+                println!("🗑️ Removed contact: {} - {}", name, phone);
+            } else {
+                println!(
+                    "⚠️ No contact found with name '{}' and phone '{}'",
+                    name, phone
+                );
+            }
         } else {
             if let Some(index) = self
-            .items
-            .iter()
-            .position(|c| c.name.eq_ignore_ascii_case(&name))
-        {
-            self.delete_contact_and_update_indexes(index, &name);
-            println!("🗑️ Removed contact: {}", name);
-        } else {
-            println!("⚠️ No contact found with name '{}'", name);
-        }
+                .items
+                .iter()
+                .position(|c| c.name.eq_ignore_ascii_case(&name))
+            {
+                self.delete_contact_and_update_indexes(index, &name);
+                println!("🗑️ Removed contact: {}", name);
+            } else {
+                println!("⚠️ No contact found with name '{}'", name);
+            }
         }
         println!("Name index after: {:?}", self.index.name_map);
         println!("Domain index after: {:?}", self.index.domain_map);
+        Ok(())
+    }
+    pub fn update(
+        &mut self,
+        name: String,
+        phone: String,
+        tags: Vec<String>,
+        new_name: Option<String>,
+        new_phone: Option<String>,
+        new_email: Option<String>,
+    ) -> Result<(), AppError> {
+        if !validate_name(&name) {
+            return Err(AppError::Validation(ValidationResponse::check_name()));
+        }
+
+        if !validate_phone_number(&phone) {
+            return Err(AppError::Validation(
+                ValidationResponse::check_phone_number(),
+            ));
+        }
+
+        //validation for new data -> Update
+        let new_name = new_name.unwrap_or_default();
+        let new_phone = new_phone.unwrap_or_default();
+        let new_email = new_email.unwrap_or_default();
+
+        if let Some(index) = self
+            .items
+            .iter()
+            .position(|c| c.name == name && c.phone == phone)
+        {
+            let old_name_key = self.items[index].name.to_lowercase();
+            let old_domain_key = self.items[index]
+                .email
+                .split('@')
+                .nth(1)
+                .unwrap_or_default()
+                .to_lowercase();
+
+            if !new_name.is_empty() {
+                if !validate_name(&new_name) {
+                    return Err(AppError::Validation("New name is invalid".to_string()));
+                }
+                self.items[index].name = new_name.clone();
+            }
+
+            if !new_phone.is_empty() {
+                if !validate_phone_number(&new_phone) {
+                    return Err(AppError::Validation(
+                        "New phone number is invalid".to_string(),
+                    ));
+                }
+                self.items[index].phone = new_phone.clone();
+            }
+
+            if !new_email.is_empty() {
+                if !validate_email(&new_email) {
+                    return Err(AppError::Validation("New email is invalid".to_string()));
+                }
+                self.items[index].email = new_email.clone();
+            }
+
+            self.items[index].tags = tags;
+            self.items[index].updated_at = Utc::now();
+
+            let new_name_key = self.items[index].name.to_lowercase();
+            let new_domain_key = self.items[index]
+                .email
+                .split('@')
+                .nth(1)
+                .unwrap_or_default()
+                .to_lowercase();
+
+            if old_name_key != new_name_key {
+                self.update_name_index(index, &old_name_key, &new_name_key);
+            }
+
+            if old_domain_key != new_domain_key {
+                self.update_domain_index(index, &old_domain_key, &new_domain_key);
+            }
+
+            println!(
+                "✅ Contact updated: {} - {} -> {} - {} - {}",
+                name, phone, new_name, new_phone, new_email
+            );
+            println!("Updated name index: {:?}", self.index.name_map);
+            println!("Updated domain index: {:?}", self.index.domain_map);
+        } else {
+            return Err(AppError::Parse(format!(
+                "Contact with name '{}' and phone '{}' not found",
+                name, phone
+            )))
+        }
         Ok(())
     }
 
@@ -158,23 +258,23 @@ impl Contacts {
             .nth(1)
             .unwrap_or_default()
             .to_lowercase();
-    
+
         //Remove the contact itself
         self.items.remove(index);
-    
+
         //Updating the name_map indexes
         if let Some(indices) = self.index.name_map.get_mut(name_key) {
             indices.retain(|&i| i != index);
             for i in indices.iter_mut() {
                 if *i > index {
-                    *i -= 1; 
+                    *i -= 1;
                 }
             }
             if indices.is_empty() {
                 self.index.name_map.remove(name_key);
             }
         }
-    
+
         // Update domain_map indexes
         if let Some(indices) = self.index.domain_map.get_mut(&domain_key) {
             indices.retain(|&i| i != index);
@@ -188,7 +288,42 @@ impl Contacts {
             }
         }
     }
-    
+
+    fn update_name_index(&mut self, index: usize, old_key: &str, new_key: &str) {
+        // Remove old index from old name
+        if let Some(indices) = self.index.name_map.get_mut(old_key) {
+            indices.retain(|&i| i != index);
+            if indices.is_empty() {
+                self.index.name_map.remove(old_key);
+            }
+        }
+
+        // Add new index to new name
+        if let Some(indices) = self.index.name_map.get_mut(new_key) {
+            indices.push(index);
+        } else {
+            self.index.name_map.insert(new_key.to_string(), vec![index]);
+        }
+    }
+
+    fn update_domain_index(&mut self, index: usize, old_key: &str, new_key: &str) {
+        // Remove old index from old domain
+        if let Some(indices) = self.index.domain_map.get_mut(old_key) {
+            indices.retain(|&i| i != index);
+            if indices.is_empty() {
+                self.index.domain_map.remove(old_key);
+            }
+        }
+
+        // Add new index to new domain
+        if let Some(indices) = self.index.domain_map.get_mut(new_key) {
+            indices.push(index);
+        } else {
+            self.index
+                .domain_map
+                .insert(new_key.to_string(), vec![index]);
+        }
+    }
 
     // Returns a read-only slice of all contacts.
     pub fn as_slice(&self) -> &[Contact] {
