@@ -1,6 +1,6 @@
 use std::{
-    collections::HashMap,
-    fs::File,
+    collections::{HashMap, HashSet},
+    fs::{self, File},
     sync::{Arc, Mutex},
     thread,
 };
@@ -11,12 +11,10 @@ use fuzzy_search::distance::levenshtein;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    domain,
-    prelude::AppError,
-    validation::{
+    prelude::AppError, store::mem::MergePolicy, validation::{
         ValidationResponse, check_contact_duplicates, check_contact_exist, validate_email,
         validate_name, validate_phone_number,
-    },
+    }
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -133,8 +131,7 @@ impl Contacts {
                     name, phone
                 );
             }
-        } else {
-            if let Some(index) = self
+        } else if let Some(index) = self
                 .items
                 .iter()
                 .position(|c| c.name.eq_ignore_ascii_case(&name))
@@ -143,7 +140,6 @@ impl Contacts {
                 println!("🗑️ Removed contact: {}", name);
             } else {
                 println!("⚠️ No contact found with name '{}'", name);
-            }
         }
         println!("Name index after: {:?}", self.index.name_map);
         println!("Domain index after: {:?}", self.index.domain_map);
@@ -240,6 +236,70 @@ impl Contacts {
                 name, phone
             )))
         }
+        Ok(())
+    }
+
+    pub fn merge_from_file(&mut self, other_path: &str, policy: MergePolicy) -> Result<(), AppError> {
+        let data = fs::read_to_string(other_path)?;
+
+        let mut imported_contacts: Vec<Contact> = serde_json::from_str(&data)
+            .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
+
+        let mut existing_keys: HashSet<(String, String)> = self.items
+            .iter()
+            .map(|c| (c.name.clone(), c.phone.clone()))
+            .collect();
+
+        for (i, contact) in imported_contacts.iter_mut().enumerate() {
+            let key = (contact.name.clone(), contact.phone.clone());
+
+            let domain_key = contact
+            .email
+            .split("@")
+            .nth(1)
+            .unwrap_or_default()
+            .to_string();
+
+            match policy {
+                MergePolicy::Keep => {
+                    if existing_keys.contains(&key) {
+                        continue;
+                    } else {
+                        existing_keys.insert(key);
+                        self.items.push(contact.clone());
+                        self.index.name_map.insert(contact.name.clone(), vec![i]);
+                        self.index.domain_map.insert(domain_key, vec![i]);
+                    }
+                }
+                MergePolicy::Overwrite => {
+                    if let Some(pos) = self.items
+                        .iter()
+                        .position(|c| c.name == key.0 && c.phone == key.1)
+                    {
+                        
+                        self.items[pos] = contact.clone();
+
+                    } else {
+                        
+                        self.items.push(contact.clone());
+                        self.index.name_map.insert(contact.name.clone(), vec![i]);
+                        self.index.domain_map.insert(domain_key, vec![i]);
+                    }
+                }
+                MergePolicy::Duplicate => {
+                    if existing_keys.contains(&key) {
+                        let duplicate_count = self.index.name_map.get(&key.0).cloned().unwrap_or_default().len();
+                        contact.name = format!("{} (dup) ({})", contact.name, duplicate_count + 1);
+                    }
+                    
+                    existing_keys.insert((contact.name.clone(), contact.email.clone()));
+                    self.items.push(contact.clone());
+                    self.index.name_map.insert(contact.name.clone(), vec![i]);
+                    self.index.domain_map.insert(domain_key, vec![i]);
+                }
+            }
+        }
+        // self.save(&existing_contacts)?;
         Ok(())
     }
 

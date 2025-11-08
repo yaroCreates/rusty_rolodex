@@ -6,7 +6,7 @@ use crate::domain::{Contact, Contacts, export_csv, import_csv};
 use crate::store::mem::{AppError, FileStore, MemStore, MergePolicy};
 use crate::traits::ContactStore;
 use crate::validation::{
-    ValidationResponse, check_contact_exist, validate_email, validate_name, validate_phone_number,
+    ValidationResponse, validate_email, validate_name, validate_phone_number,
 };
 
 #[derive(Parser)]
@@ -226,7 +226,9 @@ pub fn run_command_cli() -> Result<(), AppError> {
                     return Ok(());
                 }
             };
-            store.merge_from_file(&file, merge_policy)?;
+            // store.merge_from_file(&file, merge_policy)?;
+            contacts.merge_from_file(&file, merge_policy)?;
+            store.save(&contacts.items)?;
             println!("✅ Sync complete using policy: {}", policy);
         }
     }

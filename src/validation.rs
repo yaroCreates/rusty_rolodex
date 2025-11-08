@@ -30,7 +30,7 @@ pub fn check_contact_duplicates(name: String, mut contact_list: Vec<Contact>) ->
     // contacts.retain(|c| );
 
     contact_list.retain(|c| c.name == name);
-    return contact_list.len() > 1;
+    contact_list.len() > 1
 }
 
 pub fn validate_name(name: &str) -> bool {
