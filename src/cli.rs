@@ -5,9 +5,7 @@ use std::env;
 use crate::domain::{Contact, Contacts, export_csv, import_csv};
 use crate::store::mem::{AppError, FileStore, MemStore, MergePolicy};
 use crate::traits::ContactStore;
-use crate::validation::{
-    ValidationResponse, validate_email, validate_name, validate_phone_number,
-};
+use crate::validation::{ValidationResponse, validate_email, validate_name, validate_phone_number};
 
 #[derive(Parser)]
 #[command(
@@ -109,7 +107,6 @@ pub fn run_command_cli() -> Result<(), AppError> {
 
     let mut contacts = Contacts::new(store.load()?);
 
-
     match cli.command {
         Commands::Add {
             name,
@@ -135,7 +132,6 @@ pub fn run_command_cli() -> Result<(), AppError> {
             let new_contact =
                 Contact::new(&name, &phone, &email, tags.clone(), Utc::now(), Utc::now());
 
-            
             contacts.add(new_contact)?;
             store.save(&contacts.items)?;
             println!("✅ Added contact: {} ({})", name, email);
@@ -176,8 +172,6 @@ pub fn run_command_cli() -> Result<(), AppError> {
         Commands::Delete { name, phone } => {
             contacts.delete(name, phone)?;
             store.save(&contacts.items)?;
-
-
         }
         Commands::Update {
             name,
