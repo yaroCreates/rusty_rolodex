@@ -1,7 +1,7 @@
 [
   {
     "name": "Steve52",
-    "phone": "03020638025",
+    "phone": ["03020638025"],
     "email": "steve52@gmail.com",
     "tags": [],
     "created_at": "2023-03-24T13:08:24Z",
@@ -9,7 +9,7 @@
   },
   {
     "name": "James23456",
-    "phone": "03020638025",
+    "phone": ["03020638025"],
     "email": "james23456@gmail.com",
     "tags": [],
     "created_at": "2023-03-24T13:08:24Z",

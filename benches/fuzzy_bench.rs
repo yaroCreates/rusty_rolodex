@@ -7,7 +7,7 @@ fn bench_fuzzy_search(c: &mut Criterion) {
         .map(|i| Contact {
             name: format!("Person{}", i),
             email: format!("person{}@mail.com", i),
-            phone: format!("232323323211"),
+            phone: vec![format!("232323323211")],
             tags: vec!["bench".into()],
             created_at: Utc::now(),
             updated_at: Utc::now(),

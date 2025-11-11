@@ -25,7 +25,7 @@ impl Contact {
     ) -> Self {
         Self {
             name: name.to_string(),
-            phone: phone.to_string(),
+            phone: vec![phone.to_string()],
             email: email.to_string(),
             tags,
             created_at,
@@ -177,9 +177,9 @@ impl ContactStore for FileStore {
         for i in matches.clone() {
             if let Some(c) = contacts.get(i) {
                 println!(
-                    "- {} - {} - {} - [{}]",
+                    "- {} - [{}] - {} - [{}]",
                     c.name,
-                    c.phone,
+                    c.phone.join(", "),
                     c.email,
                     c.tags.join(", ")
                 )
@@ -293,9 +293,9 @@ impl ContactStore for MemStore {
             for i in &matches {
                 if let Some(c) = contacts.get(*i) {
                     println!(
-                        "- {} - {} - {} - [{}]",
+                        "- {} - [{}] - {} - [{}]",
                         c.name,
-                        c.phone,
+                        c.phone.join(", "),
                         c.email,
                         c.tags.join(", ")
                     );

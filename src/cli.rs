@@ -165,7 +165,7 @@ pub fn run_command_cli() -> Result<(), AppError> {
                 println!("No contacts found.");
             } else {
                 for c in filtered_contacts {
-                    println!("📇 {} | {} | {}", c.name, c.phone, c.email);
+                    println!("📇 {} | {} | {}", c.name, c.phone.join(", "), c.email);
                 }
             }
         }
@@ -369,7 +369,7 @@ mod tests {
             .map(|i| Contact {
                 name: format!("Person{}", i),
                 email: format!("person{}@mail.com", i),
-                phone: format!("232323323211"),
+                phone: vec![format!("232323323211")],
                 tags: vec!["bench".into()],
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
@@ -398,7 +398,7 @@ mod tests {
             .map(|i| Contact {
                 name: format!("Person{}", i),
                 email: format!("person{}@mail.com", i),
-                phone: format!("232323323211"),
+                phone: vec![format!("232323323211")],
                 tags: vec!["bench".into()],
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
@@ -426,7 +426,7 @@ mod tests {
             .map(|i| Contact {
                 name: format!("Person{}", i),
                 email: format!("person{}@mail.com", i),
-                phone: format!("232323323211"),
+                phone: vec![format!("232323323211")],
                 tags: vec!["bench".into()],
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
@@ -453,7 +453,7 @@ mod tests {
             .map(|i| Contact {
                 name: format!("Person{}", i),
                 email: format!("person{}@work.com", i),
-                phone: format!("232323323211"),
+                phone: vec![format!("232323323211")],
                 tags: vec!["bench".into()],
                 created_at: Utc::now(),
                 updated_at: Utc::now(),

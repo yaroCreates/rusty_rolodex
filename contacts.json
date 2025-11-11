@@ -1,7 +1,7 @@
 [
   {
     "name": "Wendy65",
-    "phone": "0692175587777",
+    "phone": ["0692175587777"],
     "email": "wendy65@example.com",
     "tags": [],
     "created_at": "2024-07-25T11:11:41Z",
@@ -9,7 +9,7 @@
   },
   {
     "name": "Alice42",
-    "phone": "006644039912",
+    "phone": ["006644039912"],
     "email": "alice42@yahoo.com",
     "tags": [
       "client",
@@ -21,7 +21,7 @@
   },
   {
     "name": "Olivia",
-    "phone": "0858548810048",
+    "phone": ["0858548810048"],
     "email": "olivia@yahoo.com",
     "tags": [
       "friend",
@@ -33,7 +33,7 @@
   },
   {
     "name": "Eve",
-    "phone": "02449810315591",
+    "phone": ["02449810315591"],
     "email": "eve@mail.com",
     "tags": [],
     "created_at": "2022-05-16T15:20:33Z",
@@ -41,7 +41,7 @@
   },
   {
     "name": "Victor",
-    "phone": "072724809955",
+    "phone": ["072724809955"],
     "email": "victor@gmail.com",
     "tags": [
       "vip",
@@ -52,7 +52,7 @@
   },
   {
     "name": "Zane69",
-    "phone": "08972268028",
+    "phone": ["08972268028"],
     "email": "zane69@gmail.com",
     "tags": [
       "friend",
@@ -63,15 +63,15 @@
   },
   {
     "name": "Jack90",
-    "phone": "09220996186",
-    "email": "jack90@yahoo.com",
+    "phone": ["09220996186"
+],    "email": "jack90@yahoo.com",
     "tags": [],
     "created_at": "2021-03-22T06:56:34Z",
     "updated_at": "2022-03-02T06:56:34Z"
   },
   {
     "name": "Yara",
-    "phone": "03144124891",
+    "phone": ["03144124891"],
     "email": "yara@outlook.com",
     "tags": [
       "prospect",
@@ -82,7 +82,7 @@
   },
   {
     "name": "Alice81",
-    "phone": "049077869283",
+    "phone": ["049077869283"],
     "email": "alice81@hotmail.com",
     "tags": [],
     "created_at": "2024-02-22T10:26:42Z",
@@ -90,7 +90,7 @@
   },
   {
     "name": "Xander64",
-    "phone": "046812179314",
+    "phone": ["046812179314"],
     "email": "xander64@mail.com",
     "tags": [
       "friend"
@@ -100,7 +100,7 @@
   },
   {
     "name": "Leo",
-    "phone": "0714707668802",
+    "phone": ["0714707668802"],
     "email": "leo@outlook.com",
     "tags": [],
     "created_at": "2025-09-14T13:11:59Z",
@@ -108,7 +108,7 @@
   },
   {
     "name": "Zane",
-    "phone": "079957296882",
+    "phone": ["079957296882"],
     "email": "zane@example.com",
     "tags": [
       "client",
@@ -120,7 +120,7 @@
   },
   {
     "name": "Jack88",
-    "phone": "05433352670346",
+    "phone": ["05433352670346"],
     "email": "jack88@yahoo.com",
     "tags": [
       "work"
@@ -130,7 +130,7 @@
   },
   {
     "name": "Zane",
-    "phone": "0293077408004",
+    "phone": ["0293077408004"],
     "email": "zane@mail.com",
     "tags": [],
     "created_at": "2025-08-30T03:56:01Z",
@@ -138,7 +138,7 @@
   },
   {
     "name": "Wendy",
-    "phone": "05135765898",
+    "phone": ["05135765898"],
     "email": "wendy@outlook.com",
     "tags": [
       "family"
@@ -148,7 +148,7 @@
   },
   {
     "name": "Wendy44",
-    "phone": "093577166052",
+    "phone": ["093577166052"],
     "email": "wendy44@mail.com",
     "tags": [
       "family",
@@ -160,7 +160,7 @@
   },
   {
     "name": "David",
-    "phone": "08315446795405",
+    "phone": ["08315446795405"],
     "email": "david@hotmail.com",
     "tags": [
       "vip"
@@ -170,7 +170,7 @@
   },
   {
     "name": "Uma33",
-    "phone": "03368400391433",
+    "phone": ["03368400391433"],
     "email": "uma33@hotmail.com",
     "tags": [],
     "created_at": "2020-08-22T01:17:54Z",
@@ -178,7 +178,7 @@
   },
   {
     "name": "Wendy",
-    "phone": "05090860500444",
+    "phone": ["05090860500444"],
     "email": "wendy@hotmail.com",
     "tags": [
       "lead"
@@ -188,7 +188,7 @@
   },
   {
     "name": "Rachel79",
-    "phone": "019002472793",
+    "phone": ["019002472793"],
     "email": "rachel79@hotmail.com",
     "tags": [
       "vip",
@@ -200,7 +200,7 @@
   },
   {
     "name": "David40",
-    "phone": "033615423112",
+    "phone": ["033615423112"],
     "email": "david40@example.com",
     "tags": [
       "client",
@@ -212,7 +212,7 @@
   },
   {
     "name": "Tina",
-    "phone": "0238890237148",
+    "phone": ["0238890237148"],
     "email": "tina@gmail.com",
     "tags": [
       "work"
@@ -222,7 +222,7 @@
   },
   {
     "name": "Nathan",
-    "phone": "0750668078256",
+    "phone": ["0750668078256"],
     "email": "nathan@example.com",
     "tags": [
       "vip",
@@ -234,7 +234,7 @@
   },
   {
     "name": "Wendy",
-    "phone": "02961878541745",
+    "phone": ["02961878541745"],
     "email": "wendy@gmail.com",
     "tags": [
       "prospect"
@@ -244,7 +244,7 @@
   },
   {
     "name": "Tina3",
-    "phone": "04640830499368",
+    "phone": ["04640830499368"],
     "email": "tina3@outlook.com",
     "tags": [
       "friend"
@@ -254,8 +254,8 @@
   },
   {
     "name": "Yara",
-    "phone": "06514025957",
-    "email": "yara@outlook.com",
+    "phone": ["06514025957"
+],    "email": "yara@outlook.com",
     "tags": [
       "lead"
     ],
@@ -264,7 +264,7 @@
   },
   {
     "name": "Quincy72",
-    "phone": "0340236350393",
+    "phone": ["0340236350393"],
     "email": "quincy72@gmail.com",
     "tags": [],
     "created_at": "2025-08-30T01:27:00Z",
@@ -272,7 +272,7 @@
   },
   {
     "name": "Yara",
-    "phone": "0693976770116",
+    "phone": ["0693976770116"],
     "email": "yara@hotmail.com",
     "tags": [
       "family",
@@ -284,7 +284,7 @@
   },
   {
     "name": "Steve66",
-    "phone": "079178879217",
+    "phone": ["079178879217"],
     "email": "steve66@example.com",
     "tags": [],
     "created_at": "2021-10-07T15:35:06Z",
@@ -292,8 +292,8 @@
   },
   {
     "name": "Mona7",
-    "phone": "00566988317",
-    "email": "mona7@gmail.com",
+    "phone": ["00566988317"
+],    "email": "mona7@gmail.com",
     "tags": [
       "lead",
       "work",
@@ -304,7 +304,7 @@
   },
   {
     "name": "Rachel25",
-    "phone": "075143143465",
+    "phone": ["075143143465"],
     "email": "rachel25@example.com",
     "tags": [
       "friend",
@@ -315,7 +315,7 @@
   },
   {
     "name": "Steve",
-    "phone": "01002973837667",
+    "phone": ["01002973837667"],
     "email": "steve@yahoo.com",
     "tags": [
       "work",
@@ -326,7 +326,7 @@
   },
   {
     "name": "Wendy",
-    "phone": "053090332214",
+    "phone": ["053090332214"],
     "email": "wendy@gmail.com",
     "tags": [
       "vip"
@@ -336,7 +336,7 @@
   },
   {
     "name": "Xander",
-    "phone": "087522888169",
+    "phone": ["087522888169"],
     "email": "xander@yahoo.com",
     "tags": [
       "client",
@@ -348,7 +348,7 @@
   },
   {
     "name": "Nathan",
-    "phone": "04089123988093",
+    "phone": ["04089123988093"],
     "email": "nathan@outlook.com",
     "tags": [
       "vip",
@@ -359,7 +359,7 @@
   },
   {
     "name": "George",
-    "phone": "0437368525234",
+    "phone": ["0437368525234"],
     "email": "george@hotmail.com",
     "tags": [],
     "created_at": "2025-06-13T03:36:22Z",
@@ -367,7 +367,7 @@
   },
   {
     "name": "Olivia",
-    "phone": "0973918254383",
+    "phone": ["0973918254383"],
     "email": "olivia@outlook.com",
     "tags": [
       "work",
@@ -378,7 +378,7 @@
   },
   {
     "name": "Alice",
-    "phone": "0839297041037",
+    "phone": ["0839297041037"],
     "email": "alice@mail.com",
     "tags": [],
     "created_at": "2023-09-25T03:03:30Z",
@@ -386,8 +386,8 @@
   },
   {
     "name": "Steve",
-    "phone": "00679838248",
-    "email": "steve@outlook.com",
+    "phone": ["00679838248"
+],    "email": "steve@outlook.com",
     "tags": [
       "vip",
       "prospect"
@@ -397,7 +397,7 @@
   },
   {
     "name": "Olivia74",
-    "phone": "018913588757",
+    "phone": ["018913588757"],
     "email": "olivia74@yahoo.com",
     "tags": [
       "friend",
@@ -408,7 +408,7 @@
   },
   {
     "name": "Paul",
-    "phone": "07190672425861",
+    "phone": ["07190672425861"],
     "email": "paul@gmail.com",
     "tags": [
       "lead",
@@ -420,7 +420,7 @@
   },
   {
     "name": "Charlie49",
-    "phone": "04694561388409",
+    "phone": ["04694561388409"],
     "email": "charlie49@gmail.com",
     "tags": [],
     "created_at": "2021-11-28T00:12:10Z",
@@ -428,15 +428,15 @@
   },
   {
     "name": "Rachel56",
-    "phone": "08735098531",
-    "email": "rachel56@yahoo.com",
+    "phone": ["08735098531"
+],    "email": "rachel56@yahoo.com",
     "tags": [],
     "created_at": "2024-11-07T18:19:03Z",
     "updated_at": "2025-05-25T18:19:03Z"
   },
   {
     "name": "Karen51",
-    "phone": "08128852619805",
+    "phone": ["08128852619805"],
     "email": "karen51@outlook.com",
     "tags": [
       "prospect"
@@ -446,15 +446,15 @@
   },
   {
     "name": "Olivia",
-    "phone": "09273995500",
-    "email": "olivia@example.com",
+    "phone": ["09273995500"
+],    "email": "olivia@example.com",
     "tags": [],
     "created_at": "2023-09-11T12:28:22Z",
     "updated_at": "2023-09-24T12:28:22Z"
   },
   {
     "name": "Hannah",
-    "phone": "0822508640415",
+    "phone": ["0822508640415"],
     "email": "hannah@outlook.com",
     "tags": [
       "lead",
@@ -465,7 +465,7 @@
   },
   {
     "name": "Alice",
-    "phone": "053692830909",
+    "phone": ["053692830909"],
     "email": "alice@yahoo.com",
     "tags": [],
     "created_at": "2024-03-08T19:19:25Z",
@@ -473,7 +473,7 @@
   },
   {
     "name": "David",
-    "phone": "076299774357",
+    "phone": ["076299774357"],
     "email": "david@mail.com",
     "tags": [
       "friend",
@@ -484,7 +484,7 @@
   },
   {
     "name": "Paul",
-    "phone": "0232879429557",
+    "phone": ["0232879429557"],
     "email": "paul@yahoo.com",
     "tags": [],
     "created_at": "2020-11-20T20:56:42Z",
@@ -492,7 +492,7 @@
   },
   {
     "name": "Karen",
-    "phone": "07697733763069",
+    "phone": ["07697733763069"],
     "email": "karen@gmail.com",
     "tags": [
       "client",
@@ -503,7 +503,7 @@
   },
   {
     "name": "Eve",
-    "phone": "09376869362640",
+    "phone": ["09376869362640"],
     "email": "eve@gmail.com",
     "tags": [
       "friend"
@@ -513,8 +513,8 @@
   },
   {
     "name": "Quincy93",
-    "phone": "00462051760",
-    "email": "quincy93@mail.com",
+    "phone": ["00462051760"
+],    "email": "quincy93@mail.com",
     "tags": [
       "work"
     ],
@@ -523,8 +523,8 @@
   },
   {
     "name": "Charlie",
-    "phone": "02647227957",
-    "email": "charlie@mail.com",
+    "phone": ["02647227957"
+],    "email": "charlie@mail.com",
     "tags": [
       "lead",
       "work",
@@ -535,7 +535,7 @@
   },
   {
     "name": "Tina",
-    "phone": "087290886678",
+    "phone": ["087290886678"],
     "email": "tina@example.com",
     "tags": [
       "prospect",
@@ -546,7 +546,7 @@
   },
   {
     "name": "Wendy19",
-    "phone": "0568513816629",
+    "phone": ["0568513816629"],
     "email": "wendy19@mail.com",
     "tags": [
       "family",
@@ -558,8 +558,8 @@
   },
   {
     "name": "Rachel",
-    "phone": "05964967456",
-    "email": "rachel@hotmail.com",
+    "phone": ["05964967456"
+],    "email": "rachel@hotmail.com",
     "tags": [
       "work"
     ],
@@ -568,7 +568,7 @@
   },
   {
     "name": "Victor96",
-    "phone": "0742994105986",
+    "phone": ["0742994105986"],
     "email": "victor96@example.com",
     "tags": [
       "vip"
@@ -578,7 +578,7 @@
   },
   {
     "name": "Rachel85",
-    "phone": "0764847095559",
+    "phone": ["0764847095559"],
     "email": "rachel85@mail.com",
     "tags": [],
     "created_at": "2024-07-19T18:03:25Z",
@@ -586,7 +586,7 @@
   },
   {
     "name": "Olivia51",
-    "phone": "03034069840406",
+    "phone": ["03034069840406"],
     "email": "olivia51@yahoo.com",
     "tags": [
       "family"
@@ -596,7 +596,7 @@
   },
   {
     "name": "Karen",
-    "phone": "00912164779649",
+    "phone": ["00912164779649"],
     "email": "karen@yahoo.com",
     "tags": [
       "friend",
@@ -608,7 +608,7 @@
   },
   {
     "name": "Mona18",
-    "phone": "07725101866771",
+    "phone": ["07725101866771"],
     "email": "mona18@mail.com",
     "tags": [
       "client",
@@ -620,7 +620,7 @@
   },
   {
     "name": "Jack",
-    "phone": "082173855775",
+    "phone": ["082173855775"],
     "email": "jack@mail.com",
     "tags": [
       "friend"
@@ -630,8 +630,8 @@
   },
   {
     "name": "Bob29",
-    "phone": "05011321081",
-    "email": "bob29@gmail.com",
+    "phone": ["05011321081"
+],    "email": "bob29@gmail.com",
     "tags": [
       "work"
     ],
@@ -640,7 +640,7 @@
   },
   {
     "name": "Ivy99",
-    "phone": "009837799241",
+    "phone": ["009837799241"],
     "email": "ivy99@gmail.com",
     "tags": [
       "client",
@@ -652,7 +652,7 @@
   },
   {
     "name": "Quincy6",
-    "phone": "047370973794",
+    "phone": ["047370973794"],
     "email": "quincy6@yahoo.com",
     "tags": [
       "family"
@@ -662,7 +662,7 @@
   },
   {
     "name": "Zane13",
-    "phone": "02514985108965",
+    "phone": ["02514985108965"],
     "email": "zane13@mail.com",
     "tags": [
       "client",
@@ -674,8 +674,8 @@
   },
   {
     "name": "Quincy",
-    "phone": "06599477635",
-    "email": "quincy@example.com",
+    "phone": ["06599477635"
+],    "email": "quincy@example.com",
     "tags": [
       "lead",
       "work"
@@ -685,15 +685,15 @@
   },
   {
     "name": "Fiona39",
-    "phone": "05983744401",
-    "email": "fiona39@gmail.com",
+    "phone": ["05983744401"
+],    "email": "fiona39@gmail.com",
     "tags": [],
     "created_at": "2022-06-08T18:16:39Z",
     "updated_at": "2022-10-16T18:16:39Z"
   },
   {
     "name": "Fiona54",
-    "phone": "02234184764810",
+    "phone": ["02234184764810"],
     "email": "fiona54@yahoo.com",
     "tags": [
       "work",
@@ -704,7 +704,7 @@
   },
   {
     "name": "Karen",
-    "phone": "0758333818987",
+    "phone": ["0758333818987"],
     "email": "karen@hotmail.com",
     "tags": [
       "family",
@@ -716,7 +716,7 @@
   },
   {
     "name": "Bob74",
-    "phone": "092201017345",
+    "phone": ["092201017345"],
     "email": "bob74@gmail.com",
     "tags": [
       "client",
@@ -728,7 +728,7 @@
   },
   {
     "name": "Paul",
-    "phone": "095426165510",
+    "phone": ["095426165510"],
     "email": "paul@hotmail.com",
     "tags": [
       "family"
@@ -738,7 +738,7 @@
   },
   {
     "name": "Paul50",
-    "phone": "0162309268316",
+    "phone": ["0162309268316"],
     "email": "paul50@gmail.com",
     "tags": [],
     "created_at": "2020-12-01T13:08:35Z",
@@ -746,7 +746,7 @@
   },
   {
     "name": "Mona20",
-    "phone": "07422872272453",
+    "phone": ["07422872272453"],
     "email": "mona20@example.com",
     "tags": [],
     "created_at": "2022-08-24T05:48:09Z",
@@ -754,7 +754,7 @@
   },
   {
     "name": "Nathan",
-    "phone": "0441842771730",
+    "phone": ["0441842771730"],
     "email": "nathan@outlook.com",
     "tags": [],
     "created_at": "2020-02-21T20:45:44Z",
@@ -762,7 +762,7 @@
   },
   {
     "name": "Hannah",
-    "phone": "099676307660",
+    "phone": ["099676307660"],
     "email": "hannah@outlook.com",
     "tags": [
       "prospect"
@@ -772,7 +772,7 @@
   },
   {
     "name": "Fiona",
-    "phone": "072668831674",
+    "phone": ["072668831674"],
     "email": "fiona@outlook.com",
     "tags": [
       "prospect",
@@ -784,7 +784,7 @@
   },
   {
     "name": "Yara",
-    "phone": "012901859958",
+    "phone": ["012901859958"],
     "email": "yara@yahoo.com",
     "tags": [],
     "created_at": "2022-02-26T18:01:45Z",
@@ -792,7 +792,7 @@
   },
   {
     "name": "Eve93",
-    "phone": "0716931477119",
+    "phone": ["0716931477119"],
     "email": "eve93@mail.com",
     "tags": [
       "prospect",
@@ -804,7 +804,7 @@
   },
   {
     "name": "Eve61",
-    "phone": "081884179478",
+    "phone": ["081884179478"],
     "email": "eve61@outlook.com",
     "tags": [
       "lead",
@@ -816,7 +816,7 @@
   },
   {
     "name": "David",
-    "phone": "0099448450225",
+    "phone": ["0099448450225"],
     "email": "david@hotmail.com",
     "tags": [
       "client",
@@ -827,7 +827,7 @@
   },
   {
     "name": "Wendy51",
-    "phone": "09217576122407",
+    "phone": ["09217576122407"],
     "email": "wendy51@hotmail.com",
     "tags": [
       "friend",
@@ -839,7 +839,7 @@
   },
   {
     "name": "Bob35",
-    "phone": "037503605746",
+    "phone": ["037503605746"],
     "email": "bob35@yahoo.com",
     "tags": [
       "work",
@@ -851,15 +851,15 @@
   },
   {
     "name": "Mona54",
-    "phone": "00140590846",
-    "email": "mona54@hotmail.com",
+    "phone": ["00140590846"
+],    "email": "mona54@hotmail.com",
     "tags": [],
     "created_at": "2022-09-09T20:27:17Z",
     "updated_at": "2023-06-28T20:27:17Z"
   },
   {
     "name": "Alice",
-    "phone": "0430877157535",
+    "phone": ["0430877157535"],
     "email": "alice@gmail.com",
     "tags": [
       "family",
@@ -870,7 +870,7 @@
   },
   {
     "name": "Fiona",
-    "phone": "06610879773354",
+    "phone": ["06610879773354"],
     "email": "fiona@example.com",
     "tags": [
       "lead",
@@ -881,8 +881,8 @@
   },
   {
     "name": "Bob54",
-    "phone": "05226145568",
-    "email": "bob54@example.com",
+    "phone": ["05226145568"
+],    "email": "bob54@example.com",
     "tags": [
       "friend",
       "client",
@@ -893,7 +893,7 @@
   },
   {
     "name": "Fiona",
-    "phone": "0611062764901",
+    "phone": ["0611062764901"],
     "email": "fiona@outlook.com",
     "tags": [
       "family"
@@ -903,7 +903,7 @@
   },
   {
     "name": "Nathan39",
-    "phone": "044194639882",
+    "phone": ["044194639882"],
     "email": "nathan39@hotmail.com",
     "tags": [
       "vip",
@@ -915,8 +915,8 @@
   },
   {
     "name": "Jack6",
-    "phone": "06695715493",
-    "email": "jack6@gmail.com",
+    "phone": ["06695715493"
+],    "email": "jack6@gmail.com",
     "tags": [
       "vip",
       "work"
@@ -926,7 +926,7 @@
   },
   {
     "name": "Eve",
-    "phone": "0633910374224",
+    "phone": ["0633910374224"],
     "email": "eve@mail.com",
     "tags": [],
     "created_at": "2021-01-03T13:57:17Z",
@@ -934,7 +934,7 @@
   },
   {
     "name": "Leo28",
-    "phone": "0540295982082",
+    "phone": ["0540295982082"],
     "email": "leo28@example.com",
     "tags": [
       "friend",
@@ -945,16 +945,16 @@
   },
   {
     "name": "Uma",
-    "phone": "08791284147",
-    "email": "uma@gmail.com",
+    "phone": ["08791284147"
+],    "email": "uma@gmail.com",
     "tags": [],
     "created_at": "2023-06-08T12:38:33Z",
     "updated_at": "2024-05-12T12:38:33Z"
   },
   {
     "name": "Ivy",
-    "phone": "03547642554",
-    "email": "ivy@yahoo.com",
+    "phone": ["03547642554"
+],    "email": "ivy@yahoo.com",
     "tags": [
       "vip",
       "lead",
@@ -965,8 +965,8 @@
   },
   {
     "name": "Charlie",
-    "phone": "02813162348",
-    "email": "charlie@mail.com",
+    "phone": ["02813162348"
+],    "email": "charlie@mail.com",
     "tags": [
       "lead",
       "prospect"
@@ -976,7 +976,7 @@
   },
   {
     "name": "Charlie",
-    "phone": "076898284091",
+    "phone": ["076898284091"],
     "email": "charlie@example.com",
     "tags": [
       "vip",
@@ -987,7 +987,7 @@
   },
   {
     "name": "Charlie92",
-    "phone": "0406746783697",
+    "phone": ["0406746783697"],
     "email": "charlie92@hotmail.com",
     "tags": [
       "prospect",
@@ -999,7 +999,7 @@
   },
   {
     "name": "Zane30",
-    "phone": "0887911806192",
+    "phone": ["0887911806192"],
     "email": "zane30@hotmail.com",
     "tags": [
       "client",
@@ -1010,7 +1010,7 @@
   },
   {
     "name": "Leo24",
-    "phone": "07489869076889",
+    "phone": ["07489869076889"],
     "email": "leo24@example.com",
     "tags": [
       "family",
@@ -1022,16 +1022,16 @@
   },
   {
     "name": "Steve52",
-    "phone": "03020638025",
-    "email": "steve52@gmail.com",
+    "phone": ["03020638025"
+],    "email": "steve52@gmail.com",
     "tags": [],
     "created_at": "2023-03-24T13:08:24Z",
     "updated_at": "2024-01-07T13:08:24Z"
   },
   {
     "name": "xerxes",
-    "phone": "09087654321",
-    "email": "xerxes@gmail.com",
+    "phone": ["09087654321"
+],    "email": "xerxes@gmail.com",
     "tags": [],
     "created_at": "2025-11-05T07:50:09.466328600Z",
     "updated_at": "2025-11-05T07:50:09.466332395Z"

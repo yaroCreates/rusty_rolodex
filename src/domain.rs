@@ -22,7 +22,7 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
     pub name: String,
-    pub phone: String,
+    pub phone: Vec<String>,
     pub email: String,
     #[serde(default)]
     pub tags: Vec<String>,
@@ -123,7 +123,7 @@ impl Contacts {
             if let Some(index) = self
                 .items
                 .iter()
-                .position(|c| c.name.eq_ignore_ascii_case(&name) && c.phone == phone)
+                .position(|c| c.name.eq_ignore_ascii_case(&name) && c.phone.contains(&phone))
             {
                 self.delete_contact_and_update_indexes(index, &name);
                 println!("🗑️ Removed contact: {} - {}", name, phone);
@@ -174,7 +174,7 @@ impl Contacts {
         if let Some(index) = self
             .items
             .iter()
-            .position(|c| c.name == name && c.phone == phone)
+            .position(|c| c.name == name && c.phone.contains(&phone))
         {
             let old_name_key = self.items[index].name.to_lowercase();
             let old_domain_key = self.items[index]
@@ -197,7 +197,7 @@ impl Contacts {
                         "New phone number is invalid".to_string(),
                     ));
                 }
-                self.items[index].phone = new_phone.clone();
+                self.items[index].phone = vec![new_phone.clone()];
             }
 
             if !new_email.is_empty() {
@@ -251,7 +251,7 @@ impl Contacts {
         let mut imported_contacts: Vec<Contact> = serde_json::from_str(&data)
             .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
 
-        let mut existing_keys: HashSet<(String, String)> = self
+        let mut existing_keys: HashSet<(String, Vec<String>)> = self
             .items
             .iter()
             .map(|c| (c.name.clone(), c.phone.clone()))
@@ -259,6 +259,9 @@ impl Contacts {
 
         for (i, contact) in imported_contacts.iter_mut().enumerate() {
             let key = (contact.name.clone(), contact.phone.clone());
+
+            // let name_key = contact.name.clone();
+            let imported_phone_set: HashSet<_> = contact.phone.iter().collect();
 
             let domain_key = contact
                 .email
@@ -292,21 +295,23 @@ impl Contacts {
                     }
                 }
                 MergePolicy::Duplicate => {
-                    if existing_keys.contains(&key) {
-                        let duplicate_count = self
-                            .index
-                            .name_map
-                            .get(&key.0)
-                            .cloned()
-                            .unwrap_or_default()
-                            .len();
-                        contact.name = format!("{} (dup) ({})", contact.name, duplicate_count + 1);
-                    }
+                    for existing_contact in &mut self.items {
+                        if existing_contact.name == contact.name
+                            && existing_contact
+                                .phone
+                                .iter()
+                                .any(|p| imported_phone_set.contains(p))
+                        {
+                            existing_contact.phone.push(contact.phone.join(", "));
 
-                    existing_keys.insert((contact.name.clone(), contact.email.clone()));
-                    self.items.push(contact.clone());
-                    self.index.name_map.insert(contact.name.clone(), vec![i]);
-                    self.index.domain_map.insert(domain_key, vec![i]);
+                            if let Some(mut key) = existing_keys.take(&key) {
+                                key.1.push(contact.phone.join(", "));
+                            }
+                            existing_contact.updated_at = Utc::now();
+                            self.index.name_map.insert(contact.name.clone(), vec![i]);
+                            self.index.domain_map.insert(domain_key.clone(), vec![i]);
+                        }
+                    }
                 }
             }
         }
