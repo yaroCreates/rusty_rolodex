@@ -89,6 +89,14 @@ enum Commands {
         #[arg(long, default_value = "keep")]
         policy: String,
     },
+    Export {
+        #[arg(long)]
+        to: String,
+    },
+    Import {
+        #[arg(long)]
+        from: String,
+    },
 }
 
 fn get_store() -> Box<dyn ContactStore> {
@@ -224,6 +232,13 @@ pub fn run_command_cli() -> Result<(), AppError> {
             contacts.merge_from_file(&file, merge_policy)?;
             store.save(&contacts.items)?;
             println!("✅ Sync complete using policy: {}", policy);
+        }
+        Commands::Export { to } => {
+            contacts.export_to_remote(to)?;
+        }
+        Commands::Import { from } => {
+            contacts.import_from_remote(from)?;
+            store.save(&contacts.items)?;
         }
     }
 

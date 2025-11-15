@@ -8,6 +8,7 @@ use std::{
 use chrono::{DateTime, Utc};
 use csv::{ReaderBuilder, Writer};
 use fuzzy_search::distance::levenshtein;
+use reqwest::{blocking::Client, header::CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -36,6 +37,11 @@ pub struct Contact {
 pub struct Contacts {
     pub items: Vec<Contact>,
     index: ContactsIndex,
+}
+
+#[derive(serde::Deserialize, Debug)]
+pub struct JsonBinWrapper {
+    pub record: Vec<Contact>,
 }
 
 // impl Iterator for Contacts {
@@ -237,6 +243,57 @@ impl Contacts {
                 "Contact with name '{}' and phone '{}' not found",
                 name, phone
             )));
+        }
+        Ok(())
+    }
+    pub fn import_from_remote(&mut self, from: String) -> Result<(), AppError> {
+        let client = Client::new();
+        let response = client
+            .get(&from)
+            .header(
+                "X-Master-Key",
+                "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
+            )
+            .send()?;
+
+        if response.status() == 200 {
+            let remote_contacts = response
+                .json::<JsonBinWrapper>()
+                .map_err(|e| AppError::Parse(format!("Invalid JSON: {}", e)))?;
+
+            for contact in remote_contacts.record {
+                self.add(contact)?;
+            }
+        } else {
+            return Err(AppError::Network(format!(
+                "Failed to import: {}",
+                response.status()
+            )));
+        }
+        Ok(())
+    }
+    pub fn export_to_remote(self, to: String) -> Result<(), AppError> {
+        let client = Client::new();
+        let response = client
+            .post(&to)
+            .json(&self.items)
+            .header(CONTENT_TYPE, "application/json")
+            .header(
+                "X-Master-Key",
+                "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
+            )
+            .send()?;
+
+        println!("Response from export: {:?}", response);
+        // response.status();
+        if response.status() == 200 {
+            println!(
+                "✅ Successfully pushed {} contacts to {}",
+                self.items.len(),
+                to
+            );
+        } else {
+            println!("Something went wrong!");
         }
         Ok(())
     }
