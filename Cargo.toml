@@ -16,7 +16,11 @@ dotenv = "0.15.0"
 
 [[bin]]
 name = "rolodex"
-path = "src/main.rs"
+path = "src/cli/main.rs"
+
+[[bin]]
+name = "rolodex-api"
+path = "src/api/main.rs"
 
 [dev-dependencies]
 assert_cmd = "2"
