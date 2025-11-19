@@ -1,12 +1,10 @@
 use std::{
-    collections::{HashMap, HashSet},
-    fs::{self, File},
-    sync::{Arc, Mutex},
-    thread,
+    collections::{HashMap, HashSet}, env, fs::{self, File}, sync::{Arc, Mutex}, thread
 };
 
 use chrono::{DateTime, Utc};
 use csv::{ReaderBuilder, Writer};
+use dotenv::dotenv;
 use fuzzy_search::distance::levenshtein;
 use reqwest::{blocking::Client, header::CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
@@ -273,6 +271,12 @@ impl Contacts {
         Ok(())
     }
     pub fn export_to_remote(self, to: String) -> Result<(), AppError> {
+        dotenv().ok();
+
+        let master_key = env::var("MASTER_KEY").expect("Error: Master key must be set");
+
+        println!("Master_key: {}",master_key);
+
         let client = Client::new();
         let response = client
             .post(&to)
