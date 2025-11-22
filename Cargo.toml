@@ -12,10 +12,17 @@ chrono = {version = "0.4.42", features = ["serde"]}
 csv = "1.3.1"
 fuzzy-search = "0.1"
 reqwest = {version= "0.12.24", features = ["blocking", "json"]}
+dotenv = "0.15.0"
+axum = {version= "0.8.7", features = ["macros"]}
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 
 [[bin]]
 name = "rolodex"
-path = "src/main.rs"
+path = "src/cli/main.rs"
+
+[[bin]]
+name = "rolodex-api"
+path = "src/api/main.rs"
 
 [dev-dependencies]
 assert_cmd = "2"
@@ -23,6 +30,13 @@ assert_fs = "1"
 predicates = "3"
 tempfile = "3"
 criterion = "0.5"
+
+[dependencies.uuid]
+version = "1.18.1"
+# Lets you generate random UUIDs
+features = [
+    "v4",
+]
 
 [[bench]]
 name = "fuzzy_bench"

@@ -1,5 +1,6 @@
 use std::{
     collections::{HashMap, HashSet},
+    env,
     fs::{self, File},
     sync::{Arc, Mutex},
     thread,
@@ -7,8 +8,9 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use csv::{ReaderBuilder, Writer};
+use dotenv::dotenv;
 use fuzzy_search::distance::levenshtein;
-use reqwest::{blocking::Client, header::CONTENT_TYPE};
+use reqwest::{Client, header::CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -31,6 +33,20 @@ pub struct Contact {
     pub created_at: DateTime<Utc>,
     #[serde(default)]
     pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpecialContact {
+    pub name: String,
+    pub phone: Vec<String>,
+    pub email: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
+    #[serde(default)]
+    pub created_at: DateTime<Utc>,
+    #[serde(default)]
+    pub updated_at: DateTime<Utc>,
+    pub id: Option<String>,
 }
 
 #[derive(Debug)]
@@ -246,7 +262,7 @@ impl Contacts {
         }
         Ok(())
     }
-    pub fn import_from_remote(&mut self, from: String) -> Result<(), AppError> {
+    pub async fn import_from_remote(&mut self, from: String) -> Result<(), AppError> {
         let client = Client::new();
         let response = client
             .get(&from)
@@ -254,11 +270,13 @@ impl Contacts {
                 "X-Master-Key",
                 "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
             )
-            .send()?;
+            .send()
+            .await?;
 
         if response.status() == 200 {
             let remote_contacts = response
                 .json::<JsonBinWrapper>()
+                .await
                 .map_err(|e| AppError::Parse(format!("Invalid JSON: {}", e)))?;
 
             for contact in remote_contacts.record {
@@ -272,7 +290,14 @@ impl Contacts {
         }
         Ok(())
     }
-    pub fn export_to_remote(self, to: String) -> Result<(), AppError> {
+
+    pub async fn export_to_remote(self, to: String) -> Result<(), AppError> {
+        dotenv().ok();
+
+        let master_key = env::var("MASTER_KEY").expect("Error: Master key must be set");
+
+        println!("Master_key: {}", master_key);
+
         let client = Client::new();
         let response = client
             .post(&to)
@@ -282,7 +307,8 @@ impl Contacts {
                 "X-Master-Key",
                 "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
             )
-            .send()?;
+            .send()
+            .await?;
 
         println!("Response from export: {:?}", response);
         // response.status();
@@ -295,6 +321,46 @@ impl Contacts {
         } else {
             println!("Something went wrong!");
         }
+        Ok(())
+    }
+
+    pub async fn async_export(self, to: String) -> Result<(), AppError> {
+        let client = Client::new();
+        let response = client
+            .post(&to)
+            .json(&self.items[0..10])
+            .header(CONTENT_TYPE, "application/json")
+            .send()
+            .await?;
+
+        let res = response.json::<Vec<SpecialContact>>().await?;
+        println!("Response from export: {:?}", res);
+
+        let data = serde_json::to_string_pretty(&res)
+            .map_err(|e| AppError::Parse(format!("Saving error...: {}", e)))?;
+        fs::write("export_contacts.json", data)?;
+
+        Ok(())
+    }
+
+    pub async fn async_check(&mut self, from: String) -> Result<(), AppError> {
+        let client = Client::new();
+        let response = client
+            .get(&from)
+            // .header(
+            //     "X-Master-Key",
+            //     "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
+            // )
+            .send()
+            .await?;
+
+        let data = response.json::<Vec<Contact>>().await;
+        println!("This is the response: {:?}", data);
+
+        for contact in data? {
+            self.add(contact)?;
+        }
+
         Ok(())
     }
 

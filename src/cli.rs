@@ -109,7 +109,7 @@ fn get_store() -> Box<dyn ContactStore> {
     }
 }
 
-pub fn run_command_cli() -> Result<(), AppError> {
+pub async fn run_command_cli() -> Result<(), AppError> {
     let cli = Cli::parse();
     let store = get_store();
 
@@ -234,10 +234,11 @@ pub fn run_command_cli() -> Result<(), AppError> {
             println!("✅ Sync complete using policy: {}", policy);
         }
         Commands::Export { to } => {
-            contacts.export_to_remote(to)?;
+            // contacts.export_to_remote(to).await?;
+            contacts.async_export(to).await?;
         }
         Commands::Import { from } => {
-            contacts.import_from_remote(from)?;
+            contacts.async_check(from).await?;
             store.save(&contacts.items)?;
         }
     }

@@ -1,2 +1,5 @@
 /target
 contacts.json
+export_contacts.json
+
+.env
