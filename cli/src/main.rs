@@ -1,4 +1,4 @@
-use rusty_rolodex::cli::run_command_cli;
+use cli::cli::run_command_cli;
 
 #[tokio::main]
 pub async fn main() {

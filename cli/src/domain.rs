@@ -354,6 +354,8 @@ impl Contacts {
             .send()
             .await?;
 
+        // let response = reqwest::get(from).await?;
+
         let data = response.json::<Vec<Contact>>().await;
         println!("This is the response: {:?}", data);
 

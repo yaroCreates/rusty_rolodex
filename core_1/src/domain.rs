@@ -1,7 +1,11 @@
 use std::fs;
 
-use crate::{domain::Contact, prelude::AppError};
+use cli::{domain::Contact, prelude::AppError};
+use serde::{Deserialize, Serialize};
 
+// use crate::{domain::Contact, prelude::AppError};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppState {
     pub path: String,
 }

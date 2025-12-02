@@ -1,5 +1,4 @@
 pub mod cli;
-pub mod core;
 pub mod domain;
 pub mod prelude;
 pub mod store;
