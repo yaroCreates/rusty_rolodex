@@ -178,10 +178,13 @@ impl Contacts {
             return Err(AppError::Validation(ValidationResponse::check_uuid()));
         }
 
-        let contact = self
+        let mut contact = self
             .items
-            .get_mut(&id)
+            .get(&id)
+            .cloned()
             .ok_or(AppError::Parse("Contact not found".to_string()))?;
+
+        self.remove_index(&contact);
 
         if let Some(name) = new_name {
             contact.name = name
@@ -193,6 +196,10 @@ impl Contacts {
             contact.email = email
         }
         contact.updated_at = Utc::now();
+
+        self.items.insert(contact.id.clone(), contact.clone());
+
+        self.add_index(contact.clone());
 
         println!("✅ Contact updated");
 
