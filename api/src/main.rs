@@ -8,9 +8,6 @@ use cli::{domain::Contact, prelude::AppError};
 use core_1::domain::AppState;
 use serde::{Deserialize, Serialize};
 
-
-
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecialContact {
     pub name: String,
@@ -61,6 +58,7 @@ async fn main() -> Result<(), AppError> {
             contact.id = Some(uuid::Uuid::new_v4().to_string());
 
             new_contacts.push(Contact {
+                id: uuid::Uuid::new_v4().to_string(),
                 name: contact.name.clone(),
                 phone: contact.phone.clone(),
                 email: contact.email.clone(),
