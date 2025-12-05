@@ -24,6 +24,7 @@ impl Contact {
         updated_at: DateTime<Utc>,
     ) -> Self {
         Self {
+            id: uuid::Uuid::new_v4().to_string(),
             name: name.to_string(),
             phone: vec![phone.to_string()],
             email: email.to_string(),
@@ -106,7 +107,7 @@ pub struct FileStore;
 // }
 
 impl ContactStore for FileStore {
-    fn load(&self) -> Result<Vec<Contact>, AppError> {
+    fn load(&self) -> Result<HashMap<String, Contact>, AppError> {
         let path_json = Path::new(JSON_FILE_PATH);
         let path_txt = Path::new(TXT_FILE_PATH);
         let path_csv = Path::new(CSV_FILE_PATH);
@@ -116,7 +117,12 @@ impl ContactStore for FileStore {
 
             let contacts: Vec<Contact> = serde_json::from_str(&data)
                 .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
-            Ok(contacts)
+
+            let mut contacts_hashmap: HashMap<String, Contact> = HashMap::new();
+            for contact in contacts {
+                contacts_hashmap.insert(contact.id.clone(), contact);
+            }
+            Ok(contacts_hashmap)
         } else if path_txt.exists() {
             //txt -> JSON
             let data = fs::read_to_string(path_txt)?;
@@ -128,10 +134,21 @@ impl ContactStore for FileStore {
                     Err(e) => eprintln!("⚠️ Skipping bad line: {}", e),
                 }
             }
-            self.save(&contacts)?;
+
+            let mut contacts_hashmap: HashMap<String, Contact> = HashMap::new();
+            for contact in contacts.clone() {
+                contacts_hashmap.insert(contact.id.clone(), contact);
+            }
+
+            self.save(contacts_hashmap)?;
             println!("Migration contacts.txt -> contact.json successful!");
             fs::remove_file(TXT_FILE_PATH)?;
-            Ok(contacts)
+
+            let mut contacts_hashmap: HashMap<String, Contact> = HashMap::new();
+            for contact in contacts {
+                contacts_hashmap.insert(contact.id.clone(), contact);
+            }
+            Ok(contacts_hashmap)
         } else if path_csv.exists() {
             //CSV -> JSON
             let file = File::open(path_csv)?;
@@ -142,222 +159,189 @@ impl ContactStore for FileStore {
                 let contact: Contact = result.map_err(|e| AppError::Parse(e.to_string()))?;
                 contacts.push(contact);
             }
-            Ok(contacts)
+
+            let mut contacts_hashmap: HashMap<String, Contact> = HashMap::new();
+            for contact in contacts {
+                contacts_hashmap.insert(contact.id.clone(), contact);
+            }
+
+            Ok(contacts_hashmap)
         } else {
-            Ok(Vec::new())
+            Ok(HashMap::new())
         }
     }
 
-    fn save(&self, contacts: &[Contact]) -> Result<(), AppError> {
-        let data = serde_json::to_string_pretty(contacts)
+    fn save(&self, contacts: HashMap<String, Contact>) -> Result<(), AppError> {
+        let contacts_vec: Vec<Contact> = contacts.values().cloned().collect();
+
+        let data = serde_json::to_string_pretty(&contacts_vec)
             .map_err(|e| AppError::Parse(format!("Saving error...: {}", e)))?;
         fs::write(JSON_FILE_PATH, data)?;
         Ok(())
     }
 
-    fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError> {
-        let contacts = self.load()?;
+    // fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError> {
+    //     let contacts = self.load()?;
 
-        let index = ContactsIndex::build(&contacts);
+    //     let index = ContactsIndex::build(&contacts);
 
-        let mut matches: Vec<usize> = Vec::new();
+    //     let mut matches: Vec<usize> = Vec::new();
 
-        if !name.is_empty() {
-            matches.extend(index.lookup_name(&name));
-        }
+    //     if !name.is_empty() {
+    //         matches.extend(index.lookup_name(&name));
+    //     }
 
-        if !domain.is_empty() {
-            matches.extend(index.lookup_domain(&domain));
-        }
+    //     if !domain.is_empty() {
+    //         matches.extend(index.lookup_domain(&domain));
+    //     }
 
-        if !fuzzy.is_empty() {
-            matches.extend(index.fuzzy_search(&fuzzy, &contacts, 2))
-        }
+    //     if !fuzzy.is_empty() {
+    //         matches.extend(index.fuzzy_search(&fuzzy, &contacts, 2))
+    //     }
 
-        println!("Matches {:?}", matches);
+    //     println!("Matches {:?}", matches);
 
-        if matches.is_empty() {
-            println!("No contacts matched your search.")
-            // return Ok(());
-        }
+    //     if matches.is_empty() {
+    //         println!("No contacts matched your search.")
+    //         // return Ok(());
+    //     }
 
-        println!("Found {} result(s)", matches.len());
-        for i in matches.clone() {
-            if let Some(c) = contacts.get(i) {
-                println!(
-                    "- {} - [{}] - {} - [{}]",
-                    c.name,
-                    c.phone.join(", "),
-                    c.email,
-                    c.tags.join(", ")
-                )
-            }
-        }
-        Ok(matches)
-    }
-    fn merge_from_file(&self, other_path: &str, policy: MergePolicy) -> Result<(), AppError> {
-        let mut existing_contacts = self.load()?;
-        let data = fs::read_to_string(other_path)?;
+    //     println!("Found {} result(s)", matches.len());
+    //     for i in matches.clone() {
+    //         if let Some(c) = contacts.get(i) {
+    //             println!(
+    //                 "- {} - [{}] - {} - [{}]",
+    //                 c.name,
+    //                 c.phone.join(", "),
+    //                 c.email,
+    //                 c.tags.join(", ")
+    //             )
+    //         }
+    //     }
+    //     Ok(matches)
+    // }
+    // fn merge_from_file(&self, other_path: &str, policy: MergePolicy) -> Result<(), AppError> {
+    //     let mut existing_contacts = self.load()?;
+    //     let data = fs::read_to_string(other_path)?;
 
-        let imported_contacts: Vec<Contact> = serde_json::from_str(&data)
-            .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
+    //     let imported_contacts: Vec<Contact> = serde_json::from_str(&data)
+    //         .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
 
-        let mut existing_keys: HashSet<(String, String)> = existing_contacts
-            .iter()
-            .map(|c| (c.name.clone(), c.email.clone()))
-            .collect();
+    //     let mut existing_keys: HashSet<(String, String)> = existing_contacts
+    //         .iter()
+    //         .map(|(_i, c)| (c.name.clone(), c.email.clone()))
+    //         .collect();
 
-        let mut duplicate_count = 0;
+    //     let mut duplicate_count = 0;
 
-        for mut contact in imported_contacts {
-            let key = (contact.name.clone(), contact.email.clone());
+    //     for mut contact in imported_contacts {
+    //         let key = (contact.name.clone(), contact.email.clone());
 
-            if existing_keys.contains(&key) {
-                duplicate_count += 1;
-            }
+    //         if existing_keys.contains(&key) {
+    //             duplicate_count += 1;
+    //         }
 
-            match policy {
-                MergePolicy::Keep => {
-                    if existing_keys.contains(&key) {
-                        continue;
-                    } else {
-                        existing_keys.insert(key);
-                        existing_contacts.push(contact);
-                    }
-                }
-                MergePolicy::Overwrite => {
-                    if let Some(pos) = existing_contacts
-                        .iter()
-                        .position(|c| c.name == key.0 && c.email == key.1)
-                    {
-                        existing_contacts[pos] = contact;
-                    } else {
-                        existing_contacts.push(contact);
-                    }
-                }
-                MergePolicy::Duplicate => {
-                    if existing_keys.contains(&key) {
-                        contact.name = format!("{} (dup) ({})", contact.name, duplicate_count + 1);
-                    }
-                    existing_keys.insert((contact.name.clone(), contact.email.clone()));
-                    existing_contacts.push(contact);
-                }
-            }
-        }
-        self.save(&existing_contacts)?;
-        Ok(())
-    }
+    //         match policy {
+    //             MergePolicy::Keep => {
+    //                 if existing_keys.contains(&key) {
+    //                     continue;
+    //                 } else {
+    //                     existing_keys.insert(key);
+    //                     existing_contacts.push(contact);
+    //                 }
+    //             }
+    //             MergePolicy::Overwrite => {
+    //                 if let Some(pos) = existing_contacts
+    //                     .iter()
+    //                     .position(|c| c.name == key.0 && c.email == key.1)
+    //                 {
+    //                     existing_contacts[pos] = contact;
+    //                 } else {
+    //                     existing_contacts.push(contact);
+    //                 }
+    //             }
+    //             MergePolicy::Duplicate => {
+    //                 if existing_keys.contains(&key) {
+    //                     contact.name = format!("{} (dup) ({})", contact.name, duplicate_count + 1);
+    //                 }
+    //                 existing_keys.insert((contact.name.clone(), contact.email.clone()));
+    //                 existing_contacts.push(contact);
+    //             }
+    //         }
+    //     }
+    //     self.save(&existing_contacts)?;
+    //     Ok(())
+    // }
 }
 
 //Memory storage
 
 pub struct MemStore {
-    contacts: std::cell::RefCell<Vec<Contact>>,
+    contacts: std::cell::RefCell<HashMap<String, Contact>>,
 }
 
 #[allow(clippy::new_without_default)]
 impl MemStore {
     pub fn new() -> Self {
         Self {
-            contacts: std::cell::RefCell::new(Vec::new()),
+            contacts: std::cell::RefCell::new(HashMap::new()),
         }
     }
 }
 
 impl ContactStore for MemStore {
-    fn load(&self) -> Result<Vec<Contact>, AppError> {
+    fn load(&self) -> Result<HashMap<String, Contact>, AppError> {
         Ok(self.contacts.borrow().clone())
     }
 
-    fn save(&self, contacts: &[Contact]) -> Result<(), AppError> {
-        *self.contacts.borrow_mut() = contacts.to_vec();
+    fn save(&self, contacts: HashMap<String, Contact>) -> Result<(), AppError> {
+        let mut contacts_hashmap = self.contacts.borrow_mut();
+        contacts_hashmap.clear();
+
+        for (_key, contact) in contacts {
+            contacts_hashmap.insert(contact.id.clone(), contact.clone());
+        }
         Ok(())
     }
-    fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError> {
-        let contacts = self.load()?;
-        let index = ContactsIndex::build(&contacts);
+    // fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError> {
+    //     let contacts = self.load()?;
+    //     let index = ContactsIndex::build(&contacts);
 
-        let mut matches: Vec<usize> = Vec::new();
+    //     let mut matches: Vec<usize> = Vec::new();
 
-        if !name.is_empty() {
-            matches.extend(index.lookup_name(&name));
-        }
+    //     if !name.is_empty() {
+    //         matches.extend(index.lookup_name(&name));
+    //     }
 
-        if !domain.is_empty() {
-            matches.extend(index.lookup_domain(&domain));
-        }
+    //     if !domain.is_empty() {
+    //         matches.extend(index.lookup_domain(&domain));
+    //     }
 
-        if !fuzzy.is_empty() {
-            matches.extend(index.fuzzy_search(&fuzzy, &contacts, 2));
-        }
+    //     if !fuzzy.is_empty() {
+    //         matches.extend(index.fuzzy_search(&fuzzy, &contacts, 2));
+    //     }
 
-        matches.sort_unstable();
-        matches.dedup();
+    //     matches.sort_unstable();
+    //     matches.dedup();
 
-        if matches.is_empty() {
-            println!("No contacts matched your search.");
-        } else {
-            println!("Found {} result(s)", matches.len());
-            for i in &matches {
-                if let Some(c) = contacts.get(*i) {
-                    println!(
-                        "- {} - [{}] - {} - [{}]",
-                        c.name,
-                        c.phone.join(", "),
-                        c.email,
-                        c.tags.join(", ")
-                    );
-                }
-            }
-        }
-        Ok(matches)
-    }
-    fn merge_from_file(&self, other_path: &str, policy: MergePolicy) -> Result<(), AppError> {
-        let mut existing_contacts = self.load()?;
-        let data = fs::read_to_string(other_path)?;
-
-        let imported_contacts: Vec<Contact> = serde_json::from_str(&data)
-            .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
-
-        let mut existing_keys: HashSet<(String, String)> = existing_contacts
-            .iter()
-            .map(|c| (c.name.clone(), c.email.clone()))
-            .collect();
-
-        for mut contact in imported_contacts {
-            let key = (contact.name.clone(), contact.email.clone());
-
-            match policy {
-                MergePolicy::Keep => {
-                    if existing_keys.contains(&key) {
-                        continue;
-                    } else {
-                        existing_keys.insert(key);
-                        existing_contacts.push(contact);
-                    }
-                }
-                MergePolicy::Overwrite => {
-                    if let Some(pos) = existing_contacts
-                        .iter()
-                        .position(|c| c.name == key.0 && c.email == key.1)
-                    {
-                        existing_contacts[pos] = contact;
-                    } else {
-                        existing_contacts.push(contact);
-                    }
-                }
-                MergePolicy::Duplicate => {
-                    if existing_keys.contains(&key) {
-                        contact.name = format!("{} (dup)", contact.name);
-                    }
-                    existing_keys.insert((contact.name.clone(), contact.email.clone()));
-                    existing_contacts.push(contact);
-                }
-            }
-        }
-        self.save(&existing_contacts)?;
-        Ok(())
-    }
+    //     if matches.is_empty() {
+    //         println!("No contacts matched your search.");
+    //     } else {
+    //         println!("Found {} result(s)", matches.len());
+    //         for i in &matches {
+    //             if let Some(c) = contacts.get(*i) {
+    //                 println!(
+    //                     "- {} - [{}] - {} - [{}]",
+    //                     c.name,
+    //                     c.phone.join(", "),
+    //                     c.email,
+    //                     c.tags.join(", ")
+    //                 );
+    //             }
+    //         }
+    //     }
+    //     Ok(matches)
+    // }
 }
 
 #[derive(Debug)]

@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::collections::{HashMap, HashSet};
+
 use regex::Regex;
 
 use crate::domain::Contact;
@@ -17,6 +19,10 @@ impl ValidationResponse {
 
     pub fn check_phone_number() -> String {
         "Invalid phone number! Please check the number and try and again".to_string()
+    }
+
+    pub fn check_uuid() -> String {
+        "Please provide unique ID".to_string()
     }
 }
 

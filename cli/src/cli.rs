@@ -48,17 +48,17 @@ enum Commands {
     /// Delete a contact by name
     Delete {
         #[arg(long)]
-        name: String,
-        #[arg(long)]
-        phone: Option<String>,
+        id: String,
+        // #[arg(long)]
+        // phone: Option<String>,
     },
     Update {
         #[arg(long)]
-        name: String,
-        #[arg(long)]
-        phone: String,
-        #[arg(long, value_delimiter = ',')]
-        tags: Vec<String>,
+        id: String,
+        // #[arg(long)]
+        // phone: String,
+        // #[arg(long, value_delimiter = ',')]
+        // tags: Vec<String>,
         //For update
         #[arg(long)]
         new_name: Option<String>,
@@ -141,7 +141,7 @@ pub async fn run_command_cli() -> Result<(), AppError> {
                 Contact::new(&name, &phone, &email, tags.clone(), Utc::now(), Utc::now());
 
             contacts.add(new_contact)?;
-            store.save(&contacts.items)?;
+            store.save(contacts.items.clone())?;
             println!("✅ Added contact: {} ({})", name, email);
         }
         Commands::List { sort, tag, domain } => {
@@ -154,6 +154,8 @@ pub async fn run_command_cli() -> Result<(), AppError> {
                 .filter(|c| tag.as_ref().is_none_or(|t| c.has_tag(t)))
                 .filter(|c| domain.as_ref().is_none_or(|d| c.has_domain(d)))
                 .collect();
+
+            filtered_contacts.sort_by(|a, b| a.name.cmp(&b.name));
 
             if let Some(sort_key) = sort {
                 match sort_key.as_str() {
@@ -177,31 +179,36 @@ pub async fn run_command_cli() -> Result<(), AppError> {
                 }
             }
         }
-        Commands::Delete { name, phone } => {
-            contacts.delete(name, phone)?;
-            store.save(&contacts.items)?;
+        Commands::Delete { id } => {
+            contacts.delete(id)?;
+            store.save(contacts.items.clone())?;
         }
         Commands::Update {
-            name,
-            phone,
-            tags,
+            id,
             new_name,
             new_phone,
             new_email,
         } => {
-            contacts.update(name, phone, tags, new_name, new_phone, new_email)?;
-            store.save(&contacts.items)?;
+            contacts.update(id, new_name, new_phone, new_email)?;
+            store.save(contacts.items.clone())?;
         }
         Commands::ExportCsv { path } => {
             let contacts = store.load()?;
-            export_csv(&path, &contacts)?;
+
+            let vec_contacts: Vec<Contact> = contacts.values().cloned().collect();
+            export_csv(&path, &vec_contacts)?;
             println!("✅ Exported {} contacts to {}", contacts.len(), path);
         }
         Commands::ImportCsv { path } => {
-            let mut contacts = store.load()?;
+            // let mut contacts = store.load()?;
             let imported = import_csv(&path)?;
-            contacts.extend(imported);
-            store.save(&contacts)?;
+
+            // contacts.extend(imported);
+            for mut c in imported {
+                c.id = uuid::Uuid::new_v4().to_string();
+                contacts.items.insert(c.id.clone(), c);
+            }
+            store.save(contacts.items)?;
             println!("✅ Imported contacts from {}", path);
         }
         Commands::Search {
@@ -213,7 +220,8 @@ pub async fn run_command_cli() -> Result<(), AppError> {
             let domain = domain.unwrap_or_default();
             let fuzzy = fuzzy.unwrap_or_default();
 
-            let _details = store.search(name, domain, fuzzy)?;
+            // let _details = store.search(name, domain, fuzzy)?;
+            let d = contacts.search(name, domain, fuzzy)?;
         }
         Commands::Sync { file, policy } => {
             let merge_policy = match policy.as_str() {
@@ -230,7 +238,7 @@ pub async fn run_command_cli() -> Result<(), AppError> {
             };
             // store.merge_from_file(&file, merge_policy)?;
             contacts.merge_from_file(&file, merge_policy)?;
-            store.save(&contacts.items)?;
+            store.save(contacts.items)?;
             println!("✅ Sync complete using policy: {}", policy);
         }
         Commands::Export { to } => {
@@ -239,7 +247,7 @@ pub async fn run_command_cli() -> Result<(), AppError> {
         }
         Commands::Import { from } => {
             contacts.async_check(from).await?;
-            store.save(&contacts.items)?;
+            store.save(contacts.items)?;
         }
     }
 
@@ -249,14 +257,17 @@ pub async fn run_command_cli() -> Result<(), AppError> {
 #[cfg(test)]
 mod tests {
 
-    use std::time::Instant;
+    use std::{collections::HashMap, time::Instant};
 
     use crate::store::mem::ContactsIndex;
 
     use super::*;
 
     fn sample_contacts() -> Contacts {
-        Contacts::new(vec![
+        let mut contacts_hashmap = HashMap::new();
+
+        contacts_hashmap.insert(
+            "1".to_string(),
             Contact::new(
                 "Alice",
                 "123",
@@ -265,6 +276,10 @@ mod tests {
                 Utc::now(),
                 Utc::now(),
             ),
+        );
+
+        contacts_hashmap.insert(
+            "2".to_string(),
             Contact::new(
                 "Bob",
                 "456",
@@ -273,15 +288,51 @@ mod tests {
                 Utc::now(),
                 Utc::now(),
             ),
+        );
+
+        contacts_hashmap.insert(
+            "3".to_string(),
             Contact::new(
                 "Carol",
                 "789",
-                "carol@work.com",
+                "carol@work.org",
                 vec!["work".into()],
                 Utc::now(),
                 Utc::now(),
             ),
-        ])
+        );
+
+        Contacts::new(contacts_hashmap)
+
+        // Contacts::new(vec![
+        //     Contact::new(
+        //         "1",
+        //         "Alice",
+        //         "123",
+        //         "alice@work.com",
+        //         vec!["work".into()],
+        //         Utc::now(),
+        //         Utc::now(),
+        //     ),
+        //     Contact::new(
+        //         "2",
+        //         "Bob",
+        //         "456",
+        //         "bob@personal.com",
+        //         vec!["personal".into()],
+        //         Utc::now(),
+        //         Utc::now(),
+        //     ),
+        //     Contact::new(
+        //         "3",
+        //         "Carol",
+        //         "789",
+        //         "carol@work.com",
+        //         vec!["work".into()],
+        //         Utc::now(),
+        //         Utc::now(),
+        //     ),
+        // ])
     }
 
     fn sample_contacts2() -> Vec<Contact> {
@@ -335,7 +386,7 @@ mod tests {
             .iter()
             .filter(|c| c.has_domain("work.com"))
             .collect();
-        assert_eq!(work_mails.len(), 2);
+        assert_eq!(work_mails.len(), 1);
     }
 
     #[test]
@@ -345,8 +396,9 @@ mod tests {
             .iter()
             .filter(|c| c.has_tag("work"))
             .filter(|c| c.has_domain("work.com"))
-            .take(1)
+            // .take(1)
             .collect();
+        println!("{:?}", results);
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "Alice");
@@ -383,6 +435,7 @@ mod tests {
         // Generate 10,000 fake contacts
         let contacts: Vec<_> = (0..10_000)
             .map(|i| Contact {
+                id: uuid::Uuid::new_v4().to_string(),
                 name: format!("Person{}", i),
                 email: format!("person{}@mail.com", i),
                 phone: vec![format!("232323323211")],
@@ -412,6 +465,7 @@ mod tests {
         // Generate 10,000 fake contacts
         let contacts: Vec<_> = (0..10_000)
             .map(|i| Contact {
+                id: uuid::Uuid::new_v4().to_string(),
                 name: format!("Person{}", i),
                 email: format!("person{}@mail.com", i),
                 phone: vec![format!("232323323211")],
@@ -440,6 +494,7 @@ mod tests {
         // Generate 10,000 fake contacts
         let contacts: Vec<_> = (0..10_000)
             .map(|i| Contact {
+                id: uuid::Uuid::new_v4().to_string(),
                 name: format!("Person{}", i),
                 email: format!("person{}@mail.com", i),
                 phone: vec![format!("232323323211")],
@@ -467,6 +522,7 @@ mod tests {
         // Generate 10,000 fake contacts
         let contacts: Vec<_> = (0..10_000)
             .map(|i| Contact {
+                id: uuid::Uuid::new_v4().to_string(),
                 name: format!("Person{}", i),
                 email: format!("person{}@work.com", i),
                 phone: vec![format!("232323323211")],

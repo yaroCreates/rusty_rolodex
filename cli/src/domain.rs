@@ -24,6 +24,7 @@ use crate::{
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
+    pub id: String,
     pub name: String,
     pub phone: Vec<String>,
     pub email: String,
@@ -51,7 +52,7 @@ pub struct SpecialContact {
 
 #[derive(Debug)]
 pub struct Contacts {
-    pub items: Vec<Contact>,
+    pub items: HashMap<String, Contact>,
     index: ContactsIndex,
 }
 
@@ -69,8 +70,8 @@ pub struct JsonBinWrapper {
 // }
 
 impl Contacts {
-    pub fn new(items: Vec<Contact>) -> Self {
-        let build_index = ContactsIndex::build(&items);
+    pub fn new(items: HashMap<String, Contact>) -> Self {
+        let build_index = ContactsIndex::build(items.clone());
 
         Self {
             items,
@@ -80,188 +81,193 @@ impl Contacts {
 
     pub fn iter(&'_ self) -> ContactsIter<'_> {
         ContactsIter {
-            inner: self.items.iter(),
+            inner: self.items.values().into_iter(),
         }
     }
-    pub fn add(&mut self, contact: Contact) -> Result<(), AppError> {
+
+    pub fn add_index(&mut self, contact: Contact) {
+        let name_key = contact.name.to_lowercase();
+        self.index
+            .name_map
+            .entry(name_key)
+            .or_default()
+            .insert(contact.id.clone());
+
+        if let Some(domain) = contact.email.split("@").nth(1) {
+            self.index
+                .domain_map
+                .entry(domain.to_lowercase())
+                .or_default()
+                .insert(contact.id);
+        }
+    }
+
+    pub fn remove_index(&mut self, contact: &Contact) {
+        let name_key = contact.name.to_lowercase();
+
+        if let Some(set) = self.index.name_map.get_mut(&name_key) {
+            set.remove(&contact.id);
+        }
+
+        if let Some(domain) = contact.email.split("@").nth(1) {
+            if let Some(set) = self.index.domain_map.get_mut(&domain.to_lowercase()) {
+                set.remove(&contact.id);
+            }
+        }
+    }
+
+    pub fn update_index(&mut self, id: String) {
+        let contact = self.items.get(&id).unwrap();
+
+        self.index
+            .name_map
+            .entry(contact.name.clone())
+            .or_default()
+            .insert(id.clone());
+
+        let domain = contact.email.split("@").nth(1).unwrap().to_string();
+        self.index.domain_map.entry(domain).or_default().insert(id);
+    }
+
+    pub fn find_with_name_phone(&self, name: &str, phone: Vec<String>) -> Option<String> {
+        let imported_phone_set: HashSet<_> = phone.iter().collect();
+
+        let get_uuids = self.index.name_map.get(name).and_then(|ids| {
+            ids.iter().cloned().find(|id| {
+                if let Some(c) = self.items.get(id) {
+                    c.phone.iter().any(|p| imported_phone_set.contains(p))
+                } else {
+                    false
+                }
+            })
+        });
+        get_uuids
+    }
+
+    pub fn add(&mut self, mut contact: Contact) -> Result<(), AppError> {
         if self.check_contact_exist(&contact) {
             return Err(AppError::Validation(
                 "Contact with info already exists".to_string(),
             ));
         }
         println!("Index: {:?}", self.index);
-        self.items.push(contact);
+        contact.id = uuid::Uuid::new_v4().to_string();
 
-        let contact_index = self.items.len() - 1;
+        self.items.insert(contact.id.clone(), contact.clone());
+        self.add_index(contact);
 
-        let name_key = self.items[contact_index].name.to_lowercase();
-        let domain_key = self.items[contact_index]
-            .email
-            .split("@")
-            .nth(1)
-            .unwrap_or_default()
-            .to_string();
-
-        if let Some(indexes) = self.index.name_map.get_mut(&name_key) {
-            indexes.push(contact_index);
-        } else {
-            self.index.name_map.insert(name_key, vec![contact_index]);
-        }
-
-        if let Some(indexes) = self.index.domain_map.get_mut(&domain_key) {
-            indexes.push(contact_index);
-        } else {
-            self.index
-                .domain_map
-                .insert(domain_key, vec![contact_index]);
-        }
         println!("Name index after: {:?}", self.index.name_map);
         println!("Domain index after: {:?}", self.index.domain_map);
         Ok(())
     }
 
-    pub fn delete(&mut self, name: String, phone: Option<String>) -> Result<(), AppError> {
-        let phone = phone.unwrap_or_default();
-
-        let name_indexes = self
-            .index
-            .name_map
-            .get(&name.to_lowercase())
-            .cloned()
-            .unwrap_or_default();
-        println!("name_keys: {:?}", name_indexes);
-
-        if name_indexes.is_empty() {
-            println!("⚠️ No contact found with name '{}'", name);
-            return Ok(());
-        }
-
-        if self.check_contact_duplicates(name.clone()) {
-            if phone.is_empty() {
-                return Err(AppError::Parse(String::from(
-                    "There are more than one contact with the name. Please provide the phone number to continue the action",
-                )));
-            }
-            if let Some(index) = self
-                .items
-                .iter()
-                .position(|c| c.name.eq_ignore_ascii_case(&name) && c.phone.contains(&phone))
-            {
-                self.delete_contact_and_update_indexes(index, &name);
-                println!("🗑️ Removed contact: {} - {}", name, phone);
-            } else {
-                println!(
-                    "⚠️ No contact found with name '{}' and phone '{}'",
-                    name, phone
-                );
-            }
-        } else if let Some(index) = self
+    pub fn delete(&mut self, id: String) -> Result<(), AppError> {
+        let contact = self
             .items
-            .iter()
-            .position(|c| c.name.eq_ignore_ascii_case(&name))
-        {
-            self.delete_contact_and_update_indexes(index, &name);
-            println!("🗑️ Removed contact: {}", name);
-        } else {
-            println!("⚠️ No contact found with name '{}'", name);
-        }
+            .remove(&id)
+            .ok_or(AppError::Parse("No contact found".to_string()))?;
+        self.remove_index(&contact);
+
         println!("Name index after: {:?}", self.index.name_map);
         println!("Domain index after: {:?}", self.index.domain_map);
+
         Ok(())
     }
     pub fn update(
         &mut self,
-        name: String,
-        phone: String,
-        tags: Vec<String>,
+        id: String,
         new_name: Option<String>,
         new_phone: Option<String>,
         new_email: Option<String>,
     ) -> Result<(), AppError> {
-        if !validate_name(&name) {
-            return Err(AppError::Validation(ValidationResponse::check_name()));
+        if id.is_empty() {
+            return Err(AppError::Validation(ValidationResponse::check_uuid()));
         }
 
-        if !validate_phone_number(&phone) {
-            return Err(AppError::Validation(
-                ValidationResponse::check_phone_number(),
-            ));
-        }
-
-        //validation for new data -> Update
-        let new_name = new_name.unwrap_or_default();
-        let new_phone = new_phone.unwrap_or_default();
-        let new_email = new_email.unwrap_or_default();
-
-        if let Some(index) = self
+        let contact = self
             .items
-            .iter()
-            .position(|c| c.name == name && c.phone.contains(&phone))
-        {
-            let old_name_key = self.items[index].name.to_lowercase();
-            let old_domain_key = self.items[index]
-                .email
-                .split('@')
-                .nth(1)
-                .unwrap_or_default()
-                .to_lowercase();
+            .get_mut(&id)
+            .ok_or(AppError::Parse("Contact not found".to_string()))?;
 
-            if !new_name.is_empty() {
-                if !validate_name(&new_name) {
-                    return Err(AppError::Validation("New name is invalid".to_string()));
-                }
-                self.items[index].name = new_name.clone();
-            }
-
-            if !new_phone.is_empty() {
-                if !validate_phone_number(&new_phone) {
-                    return Err(AppError::Validation(
-                        "New phone number is invalid".to_string(),
-                    ));
-                }
-                self.items[index].phone = vec![new_phone.clone()];
-            }
-
-            if !new_email.is_empty() {
-                if !validate_email(&new_email) {
-                    return Err(AppError::Validation("New email is invalid".to_string()));
-                }
-                self.items[index].email = new_email.clone();
-            }
-
-            self.items[index].tags = tags;
-            self.items[index].updated_at = Utc::now();
-
-            let new_name_key = self.items[index].name.to_lowercase();
-            let new_domain_key = self.items[index]
-                .email
-                .split('@')
-                .nth(1)
-                .unwrap_or_default()
-                .to_lowercase();
-
-            if old_name_key != new_name_key {
-                self.update_name_index(index, &old_name_key, &new_name_key);
-            }
-
-            if old_domain_key != new_domain_key {
-                self.update_domain_index(index, &old_domain_key, &new_domain_key);
-            }
-
-            println!(
-                "✅ Contact updated: {} - {} -> {} - {} - {}",
-                name, phone, new_name, new_phone, new_email
-            );
-            println!("Updated name index: {:?}", self.index.name_map);
-            println!("Updated domain index: {:?}", self.index.domain_map);
-        } else {
-            return Err(AppError::Parse(format!(
-                "Contact with name '{}' and phone '{}' not found",
-                name, phone
-            )));
+        if let Some(name) = new_name {
+            contact.name = name
         }
+        if let Some(phone) = new_phone {
+            contact.phone = vec![phone]
+        }
+        if let Some(email) = new_email {
+            contact.email = email
+        }
+        contact.updated_at = Utc::now();
+
+        println!("✅ Contact updated");
+
+        println!("Updated name index: {:?}", self.index.name_map);
+        println!("Updated domain index: {:?}", self.index.domain_map);
+
         Ok(())
     }
+
+    pub fn search(
+        &self,
+        name: String,
+        domain: String,
+        fuzzy: String,
+    ) -> Result<Vec<Contact>, AppError> {
+        // let mut matches: Vec<usize> = Vec::new();
+        let mut matches: Vec<Contact> = Vec::new();
+
+        if !name.is_empty() {
+            // matches.extend(self.lookup_name(&name));
+            if let Some(id) = self.index.lookup_name(&name).get(&name) {
+                if let Some(data) = self.items.get(id) {
+                    matches.push(data.clone());
+                }
+            }
+        }
+
+        if !domain.is_empty() {
+            // matches.extend(self.lookup_domain(&domain));
+            if let Some(id) = self.index.lookup_domain(&domain).get(&domain) {
+                if let Some(data) = self.items.get(id) {
+                    matches.push(data.clone());
+                }
+            }
+        }
+
+        if !fuzzy.is_empty() {
+            // if let Some(id) = self.index.fuzzy_search(query, contacts, 2) {
+
+            // }
+            let g = self.index.fuzzy_search(&fuzzy, self.items.clone(), 2);
+
+            for item in g {
+                matches.push(item);
+            }
+        }
+
+        println!("Matches {:?}", matches);
+
+        if matches.is_empty() {
+            println!("No contacts matched your search.")
+            // return Ok(());
+        }
+
+        println!("Found {} result(s)", matches.len());
+        for i in matches.clone() {
+            // if let Some(c) = contacts.get(i) {
+            println!(
+                "- {} - [{}] - {} - [{}]",
+                i.name,
+                i.phone.join(", "),
+                i.email,
+                i.tags.join(", ")
+            )
+            // }
+        }
+        Ok(matches)
+    }
+
     pub async fn import_from_remote(&mut self, from: String) -> Result<(), AppError> {
         let client = Client::new();
         let response = client
@@ -328,7 +334,7 @@ impl Contacts {
         let client = Client::new();
         let response = client
             .post(&to)
-            .json(&self.items[0..10])
+            .json(&self.items)
             .header(CONTENT_TYPE, "application/json")
             .send()
             .await?;
@@ -379,21 +385,21 @@ impl Contacts {
         let mut existing_keys: HashSet<(String, Vec<String>)> = self
             .items
             .iter()
-            .map(|c| (c.name.clone(), c.phone.clone()))
+            .map(|c| (c.1.name.clone(), c.1.phone.clone()))
             .collect();
 
-        for (i, contact) in imported_contacts.iter_mut().enumerate() {
+        for (_i, contact) in imported_contacts.iter_mut().enumerate() {
             let key = (contact.name.clone(), contact.phone.clone());
 
             // let name_key = contact.name.clone();
-            let imported_phone_set: HashSet<_> = contact.phone.iter().collect();
+            // let imported_phone_set: HashSet<_> = contact.phone.iter().collect();
 
-            let domain_key = contact
-                .email
-                .split("@")
-                .nth(1)
-                .unwrap_or_default()
-                .to_string();
+            // let domain_key = contact
+            //     .email
+            //     .split("@")
+            //     .nth(1)
+            //     .unwrap_or_default()
+            //     .to_string();
 
             match policy {
                 MergePolicy::Keep => {
@@ -401,41 +407,39 @@ impl Contacts {
                         continue;
                     } else {
                         existing_keys.insert(key);
-                        self.items.push(contact.clone());
-                        self.index.name_map.insert(contact.name.clone(), vec![i]);
-                        self.index.domain_map.insert(domain_key, vec![i]);
+                        contact.id = uuid::Uuid::new_v4().to_string();
+
+                        self.items.insert(contact.id.clone(), contact.clone());
+                        self.add_index(contact.clone());
                     }
                 }
                 MergePolicy::Overwrite => {
-                    if let Some(pos) = self
-                        .items
-                        .iter()
-                        .position(|c| c.name == key.0 && c.phone == key.1)
+                    if let Some(existing_id) =
+                        self.find_with_name_phone(&contact.name, contact.phone.clone())
                     {
-                        self.items[pos] = contact.clone();
+                        contact.id = existing_id.clone();
+                        self.items.insert(existing_id.clone(), contact.clone());
+                        self.remove_index(&contact.clone());
+                        self.add_index(contact.clone());
                     } else {
-                        self.items.push(contact.clone());
-                        self.index.name_map.insert(contact.name.clone(), vec![i]);
-                        self.index.domain_map.insert(domain_key, vec![i]);
+                        contact.id = uuid::Uuid::new_v4().to_string();
+                        self.items.insert(contact.id.clone(), contact.clone());
+                        self.update_index(contact.id.clone());
                     }
                 }
                 MergePolicy::Duplicate => {
-                    for existing_contact in &mut self.items {
-                        if existing_contact.name == contact.name
-                            && existing_contact
-                                .phone
-                                .iter()
-                                .any(|p| imported_phone_set.contains(p))
+                    for (_key, mut existing_contact) in self.items.clone() {
+                        if self
+                            .find_with_name_phone(&contact.name, contact.phone.clone())
+                            .is_some()
                         {
                             existing_contact.phone.push(contact.phone.join(", "));
-
-                            if let Some(mut key) = existing_keys.take(&key) {
-                                key.1.push(contact.phone.join(", "));
-                            }
-                            existing_contact.updated_at = Utc::now();
-                            self.index.name_map.insert(contact.name.clone(), vec![i]);
-                            self.index.domain_map.insert(domain_key.clone(), vec![i]);
                         }
+
+                        contact.id = uuid::Uuid::new_v4().to_string();
+
+                        self.items.insert(contact.id.clone(), contact.clone());
+                        self.add_index(contact.clone());
                     }
                 }
             }
@@ -445,97 +449,40 @@ impl Contacts {
     }
 
     pub fn check_contact_exist(&self, new_contact: &Contact) -> bool {
-        check_contact_exist(new_contact, &self.items)
-    }
+        let imported_phone_set: HashSet<_> = new_contact.phone.iter().collect();
 
-    pub fn check_contact_duplicates(&self, name: String) -> bool {
-        check_contact_duplicates(name, self.items.clone())
-    }
-
-    fn delete_contact_and_update_indexes(&mut self, index: usize, name_key: &str) {
-        let domain_key = self.items[index]
-            .email
-            .split('@')
-            .nth(1)
-            .unwrap_or_default()
-            .to_lowercase();
-
-        //Remove the contact itself
-        self.items.remove(index);
-
-        //Updating the name_map indexes
-        if let Some(indices) = self.index.name_map.get_mut(name_key) {
-            indices.retain(|&i| i != index);
-            for i in indices.iter_mut() {
-                if *i > index {
-                    *i -= 1;
+        let get_uuids = self.index.name_map.get(&new_contact.name).and_then(|ids| {
+            ids.iter().cloned().find(|id| {
+                if let Some(c) = self.items.get(id) {
+                    c.phone.iter().any(|p| imported_phone_set.contains(p))
+                } else {
+                    false
                 }
-            }
-            if indices.is_empty() {
-                self.index.name_map.remove(name_key);
-            }
-        }
+            })
+        });
 
-        // Update domain_map indexes
-        if let Some(indices) = self.index.domain_map.get_mut(&domain_key) {
-            indices.retain(|&i| i != index);
-            for i in indices.iter_mut() {
-                if *i > index {
-                    *i -= 1;
-                }
-            }
-            if indices.is_empty() {
-                self.index.domain_map.remove(&domain_key);
-            }
-        }
-    }
-
-    fn update_name_index(&mut self, index: usize, old_key: &str, new_key: &str) {
-        // Remove old index from old name
-        if let Some(indices) = self.index.name_map.get_mut(old_key) {
-            indices.retain(|&i| i != index);
-            if indices.is_empty() {
-                self.index.name_map.remove(old_key);
-            }
-        }
-
-        // Add new index to new name
-        if let Some(indices) = self.index.name_map.get_mut(new_key) {
-            indices.push(index);
+        if let Some(_status) = get_uuids {
+            true
         } else {
-            self.index.name_map.insert(new_key.to_string(), vec![index]);
+            false
         }
     }
 
-    fn update_domain_index(&mut self, index: usize, old_key: &str, new_key: &str) {
-        // Remove old index from old domain
-        if let Some(indices) = self.index.domain_map.get_mut(old_key) {
-            indices.retain(|&i| i != index);
-            if indices.is_empty() {
-                self.index.domain_map.remove(old_key);
-            }
-        }
-
-        // Add new index to new domain
-        if let Some(indices) = self.index.domain_map.get_mut(new_key) {
-            indices.push(index);
-        } else {
-            self.index
-                .domain_map
-                .insert(new_key.to_string(), vec![index]);
-        }
-    }
+    // pub fn check_contact_duplicates(&self, name: String) -> bool {
+    //     check_contact_duplicates(name, self.items.clone())
+    // }
 
     // Returns a read-only slice of all contacts.
-    pub fn as_slice(&self) -> &[Contact] {
-        &self.items
-    }
+    // pub fn as_slice(&self) -> &[Contact] {
+    //     &self.items
+    // }
 }
 
 //Return type
 
 pub struct ContactsIter<'a> {
-    inner: std::slice::Iter<'a, Contact>,
+    // inner: std::slice::Iter<'a, Contact>,
+    inner: std::collections::hash_map::Values<'a, String, Contact>,
 }
 
 impl<'a> Iterator for ContactsIter<'a> {
@@ -580,22 +527,28 @@ pub fn import_csv(path: &str) -> Result<Vec<Contact>, AppError> {
 
 #[derive(Debug)]
 pub struct ContactsIndex {
-    name_map: HashMap<String, Vec<usize>>,
-    domain_map: HashMap<String, Vec<usize>>,
+    name_map: HashMap<String, HashSet<String>>,
+    domain_map: HashMap<String, HashSet<String>>,
 }
 
 impl ContactsIndex {
-    pub fn build(contacts: &[Contact]) -> Self {
-        let mut name_map: HashMap<String, Vec<usize>> = HashMap::new();
-        let mut domain_map: HashMap<String, Vec<usize>> = HashMap::new();
+    pub fn build(contacts: HashMap<String, Contact>) -> Self {
+        let mut name_map: HashMap<String, HashSet<String>> = HashMap::new();
+        let mut domain_map: HashMap<String, HashSet<String>> = HashMap::new();
 
-        for (i, c) in contacts.iter().enumerate() {
-            let name_key = c.name.to_lowercase();
-            name_map.entry(name_key).or_default().push(i);
+        for contact in contacts.iter() {
+            let name_key = contact.1.name.to_lowercase();
+            name_map
+                .entry(name_key)
+                .or_default()
+                .insert(contact.1.id.clone());
 
-            if let Some(domain) = c.email.split('@').nth(1) {
+            if let Some(domain) = contact.1.email.split('@').nth(1) {
                 let domain_key = domain.to_lowercase();
-                domain_map.entry(domain_key).or_default().push(i);
+                domain_map
+                    .entry(domain_key)
+                    .or_default()
+                    .insert(contact.1.id.clone());
             }
         }
 
@@ -605,27 +558,36 @@ impl ContactsIndex {
         }
     }
 
-    pub fn lookup_name(&self, name: &str) -> Vec<usize> {
+    pub fn lookup_name(&self, name: &str) -> HashSet<String> {
         let key = name.to_lowercase();
-        self.name_map.get(&key).cloned().unwrap_or_default()
+        // self.name_map.get(&key).cloned().unwrap_or_default()
+        self.name_map.get(&key).cloned().expect("Error!")
     }
 
-    pub fn lookup_domain(&self, domain: &str) -> Vec<usize> {
+    pub fn lookup_domain(&self, domain: &str) -> HashSet<String> {
         let key = domain.to_lowercase();
-        self.domain_map.get(&key).cloned().unwrap_or_default()
+        // self.domain_map.get(&key).cloned().unwrap_or_default()
+        self.domain_map.get(&key).cloned().expect("Error!")
     }
 
-    pub fn fuzzy_search(&self, query: &str, contacts: &[Contact], max_edits: usize) -> Vec<usize> {
+    pub fn fuzzy_search(
+        &self,
+        query: &str,
+        contacts: HashMap<String, Contact>,
+        max_edits: usize,
+    ) -> Vec<Contact> {
         println!("Running fuzzy search...");
         let q = query.to_lowercase();
-        let mut results = Vec::new();
+        let mut results: Vec<Contact> = Vec::new();
 
-        for (i, c) in contacts.iter().enumerate() {
+        let contacts_x = contacts.values();
+
+        for (i, c) in contacts_x.enumerate() {
             let name_distance = levenshtein(&q, &c.name.to_lowercase());
             let email_distance = levenshtein(&q, &c.email.to_lowercase());
 
             if name_distance < max_edits || email_distance < max_edits {
-                results.push(i);
+                results.push(c.clone());
             }
         }
 
