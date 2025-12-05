@@ -13,14 +13,7 @@ use fuzzy_search::distance::levenshtein;
 use reqwest::{Client, header::CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    prelude::AppError,
-    store::mem::MergePolicy,
-    validation::{
-        ValidationResponse, check_contact_duplicates, check_contact_exist, validate_email,
-        validate_name, validate_phone_number,
-    },
-};
+use crate::{prelude::AppError, store::mem::MergePolicy, validation::ValidationResponse};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
@@ -81,7 +74,7 @@ impl Contacts {
 
     pub fn iter(&'_ self) -> ContactsIter<'_> {
         ContactsIter {
-            inner: self.items.values().into_iter(),
+            inner: self.items.values(),
         }
     }
 
@@ -109,10 +102,10 @@ impl Contacts {
             set.remove(&contact.id);
         }
 
-        if let Some(domain) = contact.email.split("@").nth(1) {
-            if let Some(set) = self.index.domain_map.get_mut(&domain.to_lowercase()) {
-                set.remove(&contact.id);
-            }
+        if let Some(domain) = contact.email.split("@").nth(1)
+            && let Some(set) = self.index.domain_map.get_mut(&domain.to_lowercase())
+        {
+            set.remove(&contact.id);
         }
     }
 
@@ -132,16 +125,17 @@ impl Contacts {
     pub fn find_with_name_phone(&self, name: &str, phone: Vec<String>) -> Option<String> {
         let imported_phone_set: HashSet<_> = phone.iter().collect();
 
-        let get_uuids = self.index.name_map.get(name).and_then(|ids| {
-            ids.iter().cloned().find(|id| {
-                if let Some(c) = self.items.get(id) {
-                    c.phone.iter().any(|p| imported_phone_set.contains(p))
-                } else {
-                    false
-                }
-            })
-        });
-        get_uuids
+        self.index.name_map.get(name).and_then(|ids| {
+            ids.iter()
+                .find(|&id| {
+                    if let Some(c) = self.items.get(id) {
+                        c.phone.iter().any(|p| imported_phone_set.contains(p))
+                    } else {
+                        false
+                    }
+                })
+                .cloned()
+        })
     }
 
     pub fn add(&mut self, mut contact: Contact) -> Result<(), AppError> {
@@ -219,19 +213,19 @@ impl Contacts {
 
         if !name.is_empty() {
             // matches.extend(self.lookup_name(&name));
-            if let Some(id) = self.index.lookup_name(&name).get(&name) {
-                if let Some(data) = self.items.get(id) {
-                    matches.push(data.clone());
-                }
+            if let Some(id) = self.index.lookup_name(&name).get(&name)
+                && let Some(data) = self.items.get(id)
+            {
+                matches.push(data.clone());
             }
         }
 
         if !domain.is_empty() {
             // matches.extend(self.lookup_domain(&domain));
-            if let Some(id) = self.index.lookup_domain(&domain).get(&domain) {
-                if let Some(data) = self.items.get(id) {
-                    matches.push(data.clone());
-                }
+            if let Some(id) = self.index.lookup_domain(&domain).get(&domain)
+                && let Some(data) = self.items.get(id)
+            {
+                matches.push(data.clone());
             }
         }
 
@@ -388,7 +382,7 @@ impl Contacts {
             .map(|c| (c.1.name.clone(), c.1.phone.clone()))
             .collect();
 
-        for (_i, contact) in imported_contacts.iter_mut().enumerate() {
+        for contact in imported_contacts.iter_mut() {
             let key = (contact.name.clone(), contact.phone.clone());
 
             // let name_key = contact.name.clone();
@@ -452,20 +446,23 @@ impl Contacts {
         let imported_phone_set: HashSet<_> = new_contact.phone.iter().collect();
 
         let get_uuids = self.index.name_map.get(&new_contact.name).and_then(|ids| {
-            ids.iter().cloned().find(|id| {
-                if let Some(c) = self.items.get(id) {
-                    c.phone.iter().any(|p| imported_phone_set.contains(p))
-                } else {
-                    false
-                }
-            })
+            ids.iter()
+                .find(|&id| {
+                    if let Some(c) = self.items.get(id) {
+                        c.phone.iter().any(|p| imported_phone_set.contains(p))
+                    } else {
+                        false
+                    }
+                })
+                .cloned()
         });
 
-        if let Some(_status) = get_uuids {
-            true
-        } else {
-            false
-        }
+        // if let Some(_status) = get_uuids {
+        //     true
+        // } else {
+        //     false
+        // }
+        matches!(get_uuids, Some(_status))
     }
 
     // pub fn check_contact_duplicates(&self, name: String) -> bool {
@@ -582,7 +579,7 @@ impl ContactsIndex {
 
         let contacts_x = contacts.values();
 
-        for (i, c) in contacts_x.enumerate() {
+        for c in contacts_x {
             let name_distance = levenshtein(&q, &c.name.to_lowercase());
             let email_distance = levenshtein(&q, &c.email.to_lowercase());
 

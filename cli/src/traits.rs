@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{domain::Contact, prelude::AppError, store::mem::MergePolicy};
+use crate::{domain::Contact, prelude::AppError};
 
 pub trait ContactStore {
     fn load(&self) -> Result<HashMap<String, Contact>, AppError>;

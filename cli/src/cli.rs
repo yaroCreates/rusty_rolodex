@@ -221,7 +221,7 @@ pub async fn run_command_cli() -> Result<(), AppError> {
             let fuzzy = fuzzy.unwrap_or_default();
 
             // let _details = store.search(name, domain, fuzzy)?;
-            let d = contacts.search(name, domain, fuzzy)?;
+            let _d = contacts.search(name, domain, fuzzy)?;
         }
         Commands::Sync { file, policy } => {
             let merge_policy = match policy.as_str() {

@@ -1,7 +1,5 @@
 #![allow(dead_code)]
 
-use std::collections::{HashMap, HashSet};
-
 use regex::Regex;
 
 use crate::domain::Contact;
