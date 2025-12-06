@@ -18,6 +18,10 @@ impl ValidationResponse {
     pub fn check_phone_number() -> String {
         "Invalid phone number! Please check the number and try and again".to_string()
     }
+
+    pub fn check_uuid() -> String {
+        "Please provide unique ID".to_string()
+    }
 }
 
 pub fn check_contact_exist(contact: &Contact, contact_list: &[Contact]) -> bool {
