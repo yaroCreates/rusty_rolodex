@@ -1,11 +1,16 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use axum::{Json, Router, extract::State, routing::get};
 use chrono::{DateTime, Utc};
 // use rusty_rolodex::{core::domain::AppState, domain::Contact, prelude::AppError};
-
-use cli::{domain::Contact, prelude::AppError};
-use core_1::domain::AppState;
+use rolodex_core::{
+    domain::Contact,
+    error::AppError,
+    store::{ContactStore, FileStore},
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,51 +29,57 @@ pub struct SpecialContact {
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
-    let shared_state = Arc::new(Mutex::new(AppState::new("another_contacts.json")));
+    // let shared_state = Arc::new(Mutex::new(AppState::new("another_contacts.json")));
+    let store = Arc::new(Mutex::new(FileStore::new("contacts.json")));
+    // let store=Arc::new(FileStore::new("contacts.json"));
 
     // build our application with a single route
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .route("/contacts", get(get_contacts).post(post_contacts))
-        .with_state(shared_state);
+        .with_state(store);
 
-    async fn get_contacts(State(state): State<Arc<Mutex<AppState>>>) -> Json<Vec<Contact>> {
-        // let data = fs::read_to_string("another_contacts.json").expect("Path wrong");
-
-        // let imported_contacts: Vec<Contact> = serde_json::from_str(&data)
-        //     .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e))).expect("Issues getting contacts");
-
+    async fn get_contacts(State(state): State<Arc<Mutex<FileStore>>>) -> Json<Vec<Contact>> {
         let guard = state.lock().unwrap();
         let imported_contacts = guard.load().expect("Panic happened!");
 
-        Json(imported_contacts)
+        let data = imported_contacts.into_values().collect();
+
+        Json(data)
     }
 
+    // async fn get_all(store: axum::extract::State<Arc<FileStore>>) -> Json<Vec<Contact>> {
+    //     let data: Vec<Contact> = store.load().unwrap().into_values().collect();
+    //     Json(data)
+    // }
+
     async fn post_contacts(
-        State(state): State<Arc<Mutex<AppState>>>,
-        Json(mut payload): Json<Vec<SpecialContact>>,
-    ) -> Json<Vec<SpecialContact>> {
+        State(state): State<Arc<Mutex<FileStore>>>,
+        // store: axum::extract::State<Arc<FileStore>>,
+        Json(mut payload): Json<Vec<Contact>>,
+    ) -> Json<Vec<Contact>> {
         println!("Axum payload:{:?}", payload.clone());
 
         let guard = state.lock().unwrap();
 
-        let mut new_contacts: Vec<Contact> = Vec::new();
+        let mut new_contacts: HashMap<String, Contact> = HashMap::new();
 
         for contact in payload.iter_mut() {
-            contact.id = Some(uuid::Uuid::new_v4().to_string());
-
-            new_contacts.push(Contact {
-                id: uuid::Uuid::new_v4().to_string(),
-                name: contact.name.clone(),
-                phone: contact.phone.clone(),
-                email: contact.email.clone(),
-                tags: contact.tags.clone(),
-                created_at: contact.created_at,
-                updated_at: contact.updated_at,
-            });
+            new_contacts.insert(
+                uuid::Uuid::new_v4().to_string(),
+                Contact {
+                    id: uuid::Uuid::new_v4().to_string(),
+                    name: contact.name.clone(),
+                    phone: contact.phone.clone(),
+                    email: contact.email.clone(),
+                    tags: contact.tags.clone(),
+                    created_at: contact.created_at,
+                    updated_at: contact.updated_at,
+                },
+            );
         }
 
-        guard.save(&new_contacts).expect("Panic occurred!");
+        guard.save(new_contacts).expect("Panic occurred!");
 
         println!("Axum payload after inserting:{:?}", payload);
         Json(payload)

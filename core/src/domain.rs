@@ -1,7 +1,12 @@
+use serde::{Deserialize, Serialize};
+use std::fs;
+
+// use crate::{domain::Contact, prelude::AppError};
+
 use std::{
     collections::{HashMap, HashSet},
     env,
-    fs::{self, File},
+    fs::File,
     sync::{Arc, Mutex},
     thread,
 };
@@ -11,9 +16,41 @@ use csv::{ReaderBuilder, Writer};
 use dotenv::dotenv;
 use fuzzy_search::distance::levenshtein;
 use reqwest::{Client, header::CONTENT_TYPE};
-use serde::{Deserialize, Serialize};
 
-use crate::{prelude::AppError, store::mem::MergePolicy, validation::ValidationResponse};
+use crate::{error::AppError, store::MergePolicy, validation::ValidationResponse};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AppState {
+    pub path: String,
+}
+
+impl AppState {
+    pub fn new(path: &str) -> Self {
+        Self {
+            path: path.to_string(),
+        }
+    }
+
+    pub fn load(&self) -> Result<Vec<Contact>, AppError> {
+        let data = fs::read_to_string(&self.path)
+            .map_err(|e| AppError::Parse(format!("Read error: {}", e)))?;
+
+        let contacts: Vec<Contact> = serde_json::from_str(&data)
+            .map_err(|e| AppError::Parse(format!("JSON error: {}", e)))?;
+
+        Ok(contacts)
+    }
+
+    pub fn save(&self, contacts: &[Contact]) -> Result<(), AppError> {
+        let serialized = serde_json::to_string_pretty(contacts)
+            .map_err(|e| AppError::Parse(format!("Serialize error: {}", e)))?;
+
+        fs::write(&self.path, serialized)
+            .map_err(|e| AppError::Parse(format!("Write error: {}", e)))?;
+
+        Ok(())
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
@@ -27,6 +64,51 @@ pub struct Contact {
     pub created_at: DateTime<Utc>,
     #[serde(default)]
     pub updated_at: DateTime<Utc>,
+}
+
+impl Contact {
+    pub fn new(
+        name: &str,
+        phone: &str,
+        email: &str,
+        tags: Vec<String>,
+        created_at: DateTime<Utc>,
+        updated_at: DateTime<Utc>,
+    ) -> Self {
+        Self {
+            id: uuid::Uuid::new_v4().to_string(),
+            name: name.to_string(),
+            phone: vec![phone.to_string()],
+            email: email.to_string(),
+            tags,
+            created_at,
+            updated_at,
+        }
+    }
+
+    // for migrating from txt -> JSON
+    pub fn from_line(line: &str) -> Result<Self, AppError> {
+        let parts: Vec<&str> = line.split(",").collect();
+        if parts.len() != 3 {
+            return Err(AppError::Parse(format!("Invalid line: {}", line)));
+        }
+        Ok(Self::new(
+            parts[0],
+            parts[1],
+            parts[2],
+            vec![],
+            Utc::now(),
+            Utc::now(),
+        ))
+    }
+
+    pub fn has_tag(&self, tag: &str) -> bool {
+        self.tags.iter().any(|t| t == tag)
+    }
+
+    pub fn has_domain(&self, domain: &str) -> bool {
+        self.email.ends_with(&format!("@{}", domain))
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,7 +128,7 @@ pub struct SpecialContact {
 #[derive(Debug)]
 pub struct Contacts {
     pub items: HashMap<String, Contact>,
-    index: ContactsIndex,
+    pub index: ContactsIndex,
 }
 
 #[derive(serde::Deserialize, Debug)]

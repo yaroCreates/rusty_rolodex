@@ -83,31 +83,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
 
 [[package]]
-name = "api"
-version = "0.1.0"
-dependencies = [
- "assert_cmd",
- "assert_fs",
- "axum",
- "chrono",
- "clap",
- "cli",
- "core_1",
- "criterion",
- "csv",
- "dotenv",
- "fuzzy-search",
- "predicates",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "uuid",
-]
-
-[[package]]
 name = "assert_cmd"
 version = "2.0.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -353,29 +328,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b94f61472cee1439c0b966b47e3aca9ae07e45d070759512cd390ea2bebc6675"
 
 [[package]]
-name = "cli"
-version = "0.1.0"
-dependencies = [
- "assert_cmd",
- "assert_fs",
- "axum",
- "chrono",
- "clap",
- "criterion",
- "csv",
- "dotenv",
- "fuzzy-search",
- "predicates",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "uuid",
-]
-
-[[package]]
 name = "colorchoice"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -396,30 +348,6 @@ name = "core-foundation-sys"
 version = "0.8.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
-
-[[package]]
-name = "core_1"
-version = "0.1.0"
-dependencies = [
- "assert_cmd",
- "assert_fs",
- "axum",
- "chrono",
- "clap",
- "cli",
- "criterion",
- "csv",
- "dotenv",
- "fuzzy-search",
- "predicates",
- "regex",
- "reqwest",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "uuid",
-]
 
 [[package]]
 name = "criterion"
@@ -1476,6 +1404,78 @@ dependencies = [
  "libc",
  "untrusted",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "rolodex_api"
+version = "0.1.0"
+dependencies = [
+ "assert_cmd",
+ "assert_fs",
+ "axum",
+ "chrono",
+ "clap",
+ "criterion",
+ "csv",
+ "dotenv",
+ "fuzzy-search",
+ "predicates",
+ "regex",
+ "reqwest",
+ "rolodex_cli",
+ "rolodex_core",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "rolodex_cli"
+version = "0.1.0"
+dependencies = [
+ "assert_cmd",
+ "assert_fs",
+ "axum",
+ "chrono",
+ "clap",
+ "criterion",
+ "csv",
+ "dotenv",
+ "fuzzy-search",
+ "predicates",
+ "regex",
+ "reqwest",
+ "rolodex_core",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "rolodex_core"
+version = "0.1.0"
+dependencies = [
+ "assert_cmd",
+ "assert_fs",
+ "axum",
+ "chrono",
+ "clap",
+ "criterion",
+ "csv",
+ "dotenv",
+ "fuzzy-search",
+ "predicates",
+ "regex",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]
