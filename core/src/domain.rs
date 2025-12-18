@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 use std::fs;
+use uuid::Uuid;
 
 // use crate::{domain::Contact, prelude::AppError};
 
@@ -125,8 +125,7 @@ impl Contact {
         self.email.ends_with(&format!("@{}", domain))
     }
     pub fn from(raw: ContactRaw) -> Self {
-        let id = Uuid::parse_str(&raw.id)
-            .unwrap_or_else(|_| Uuid::new_v4());
+        let id = Uuid::parse_str(&raw.id).unwrap_or_else(|_| Uuid::new_v4());
 
         Contact {
             id,
@@ -282,19 +281,26 @@ impl Contacts {
 
         Ok(())
     }
-    fn check_contact_before_updating(&self, contact: &Contact, new_name: &Option<String>, new_email: &Option<String>) -> Result<(), AppError> {
-        if let Some(n) = new_name.clone() 
-            && n == contact.name {
-                return Err(AppError::Validation(
-                    "Contact already has same name".to_string(),
-                ));
+    fn check_contact_before_updating(
+        &self,
+        contact: &Contact,
+        new_name: &Option<String>,
+        new_email: &Option<String>,
+    ) -> Result<(), AppError> {
+        if let Some(n) = new_name.clone()
+            && n == contact.name
+        {
+            return Err(AppError::Validation(
+                "Contact already has same name".to_string(),
+            ));
         }
 
         if let Some(e) = new_email.clone()
-            &&  e == contact.email {
-                return Err(AppError::Validation(
-                    "Contact already has same email address".to_string(),
-                ));
+            && e == contact.email
+        {
+            return Err(AppError::Validation(
+                "Contact already has same email address".to_string(),
+            ));
         }
         Ok(())
     }
@@ -357,7 +363,6 @@ impl Contacts {
                 let result = self.items.get(&id).expect("Error");
                 matches.push(result.clone());
             }
-
         }
 
         if let Some(domain) = domain {
@@ -366,25 +371,24 @@ impl Contacts {
                 let result = self.items.get(&id).expect("Error");
                 matches.push(result.clone());
             }
-
         }
 
         if let Some(fuzzy) = fuzzy {
             let g = self.index.fuzzy_search(&fuzzy, &self.items, 2);
-    
+
             for item in g {
                 matches.push(item.clone());
             }
-
         }
 
         if let Some(concurrent) = concurrent {
-            let g = self.index.fuzzy_search_concurrency(&concurrent, &self.items, 2);
-    
+            let g = self
+                .index
+                .fuzzy_search_concurrency(&concurrent, &self.items, 2);
+
             for item in g {
                 matches.push(item.clone());
             }
-
         }
 
         println!("Matches {:?}", matches);
@@ -682,17 +686,11 @@ impl ContactsIndex {
 
         for (_key, contact) in contacts.iter() {
             let name_key = contact.name.to_lowercase();
-            name_map
-                .entry(name_key)
-                .or_default()
-                .insert(contact.id);
+            name_map.entry(name_key).or_default().insert(contact.id);
 
             if let Some(domain) = contact.email.split('@').nth(1) {
                 let domain_key = domain.to_lowercase();
-                domain_map
-                    .entry(domain_key)
-                    .or_default()
-                    .insert(contact.id);
+                domain_map.entry(domain_key).or_default().insert(contact.id);
             }
         }
 
@@ -746,13 +744,12 @@ impl ContactsIndex {
         let num_threads = 4;
         let query = query.to_lowercase();
 
-        let contacts_vec:Vec<Contact> = contacts.values().cloned().collect();
+        let contacts_vec: Vec<Contact> = contacts.values().cloned().collect();
         let total = contacts_vec.len();
 
         if total == 0 {
             return Vec::new();
         }
-
 
         // let size_of_chunk = (total + num_threads - 1) /num_threads;
         let size_of_chunk = total.div_ceil(num_threads);
@@ -766,7 +763,6 @@ impl ContactsIndex {
 
         //Splitting into Chunks -> Spawn threads
         for start_of_chunk in (0..total).step_by(size_of_chunk) {
-            
             let end_of_chunk = usize::min(start_of_chunk + size_of_chunk, total);
 
             let contacts_clone = Arc::clone(&contacts_arc);
@@ -777,9 +773,7 @@ impl ContactsIndex {
                 let mut local_results = Vec::new();
 
                 //Each threads going to work!
-                for c in &contacts_clone[start_of_chunk..end_of_chunk]
-                    
-                {
+                for c in &contacts_clone[start_of_chunk..end_of_chunk] {
                     let name_distance = levenshtein(&query_clone, &c.name.to_lowercase());
                     let email_distance = levenshtein(&query_clone, &c.email.to_lowercase());
 

@@ -7,7 +7,10 @@ use std::{
 
 use uuid::Uuid;
 
-use crate::{domain::{Contact, ContactRaw}, error::AppError};
+use crate::{
+    domain::{Contact, ContactRaw},
+    error::AppError,
+};
 
 // const JSON_FILE_PATH: &str = "contacts.json";
 
@@ -74,7 +77,7 @@ impl ContactStore for FileStore {
         let contacts: Vec<ContactRaw> = serde_json::from_str(&data)
             .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
 
-        let migrated_contacts:Vec<Contact> = contacts.into_iter().map(Contact::from).collect();
+        let migrated_contacts: Vec<Contact> = contacts.into_iter().map(Contact::from).collect();
 
         let mut contacts_hashmap: HashMap<Uuid, Contact> = HashMap::new();
         for contact in migrated_contacts {

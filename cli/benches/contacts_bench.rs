@@ -12,17 +12,20 @@ fn sample_contacts(n: usize) -> Contacts {
         let id = Uuid::new_v4();
         let now = Utc::now();
 
-        items.insert(id, Contact {
+        items.insert(
             id,
-            name: format!("User{}", i),
-            phone: vec![format!("232323323211")],
-            email: format!("user{}@example.com", i),
-            tags: vec!["work".into()],
-            created_at: now,
-            updated_at: now,
-        });
+            Contact {
+                id,
+                name: format!("User{}", i),
+                phone: vec![format!("232323323211")],
+                email: format!("user{}@example.com", i),
+                tags: vec!["work".into()],
+                created_at: now,
+                updated_at: now,
+            },
+        );
     }
-    
+
     Contacts::new(items)
 }
 

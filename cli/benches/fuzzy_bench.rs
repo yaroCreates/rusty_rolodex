@@ -5,28 +5,30 @@ use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use rolodex_core::domain::{Contact, ContactsIndex};
 use uuid::Uuid;
 
-fn build_contacts(count: usize) ->HashMap<Uuid, Contact> {
+fn build_contacts(count: usize) -> HashMap<Uuid, Contact> {
     let mut map = HashMap::with_capacity(count);
 
     for i in 0..count {
         let id = Uuid::new_v4();
         let now = Utc::now();
 
-        map.insert(id, Contact {
+        map.insert(
             id,
-            name: format!("Person{}", i),
-            email: format!("person{}@mail.com", i),
-            phone: vec![format!("232323323211")],
-            tags: vec!["bench".into()],
-            created_at: now,
-            updated_at: now,  
-        });
+            Contact {
+                id,
+                name: format!("Person{}", i),
+                email: format!("person{}@mail.com", i),
+                phone: vec![format!("232323323211")],
+                tags: vec!["bench".into()],
+                created_at: now,
+                updated_at: now,
+            },
+        );
     }
     map
 }
 
 fn bench_fuzzy_search(c: &mut Criterion) {
-
     let contacts = build_contacts(10_000);
 
     let index = ContactsIndex::build(&contacts);

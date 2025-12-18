@@ -6,8 +6,8 @@ use rolodex_core::store::{ContactStore, FileStore, MergePolicy};
 use rolodex_core::validation::{
     ValidationResponse, validate_email, validate_name, validate_phone_number,
 };
-use uuid::Uuid;
 use std::env;
+use uuid::Uuid;
 
 // use crate::domain::{Contact, Contacts, export_csv, import_csv};
 // use crate::store::mem::{AppError, FileStore, MemStore, MergePolicy};
@@ -169,7 +169,6 @@ pub async fn run_command_cli() -> Result<(), AppError> {
             println!("✅ Added contact: {} ({})", name, email);
         }
         Commands::List { sort, tag, domain } => {
-
             //Chain filters using iterator
             let mut filtered_contacts: Vec<&Contact> = contacts
                 .iter()
@@ -237,7 +236,7 @@ pub async fn run_command_cli() -> Result<(), AppError> {
             name,
             domain,
             fuzzy,
-            concurrent
+            concurrent,
         } => {
             let _d = contacts.search(name, domain, fuzzy, concurrent)?;
         }
@@ -280,7 +279,6 @@ mod tests {
     // use crate::store::mem::ContactsIndex;
 
     use rolodex_core::domain::ContactsIndex;
-    use uuid::uuid;
 
     use super::*;
 
@@ -288,7 +286,7 @@ mod tests {
         let mut contacts_hashmap = HashMap::new();
 
         contacts_hashmap.insert(
-            Uuid::parse_str("1").unwrap(),
+            Uuid::parse_str("a8c84b7c-e85c-4bfa-9f81-e365238229b9").unwrap(),
             Contact::new(
                 "Alice",
                 "123",
@@ -300,7 +298,7 @@ mod tests {
         );
 
         contacts_hashmap.insert(
-            Uuid::parse_str("2").unwrap(),
+            Uuid::parse_str("febc56f8-b668-4f84-be16-6f23a203a170").unwrap(),
             Contact::new(
                 "Bob",
                 "456",
@@ -312,7 +310,7 @@ mod tests {
         );
 
         contacts_hashmap.insert(
-            Uuid::parse_str("3").unwrap(),
+            Uuid::parse_str("c9c29c4f-8ae4-48c9-ae77-6c7f02a3bc2f").unwrap(),
             Contact::new(
                 "Carol",
                 "789",
@@ -356,59 +354,68 @@ mod tests {
         // ])
     }
 
-    fn sample_contacts2() -> HashMap<Uuid, Contact> {
+    fn sample_contacts2() -> (Uuid, HashMap<Uuid, Contact>) {
         let mut contacts_hashmap: HashMap<Uuid, Contact> = HashMap::new();
 
+        let alice_id = Uuid::new_v4();
+        let id2 = Uuid::new_v4();
+        let id3 = Uuid::new_v4();
+        let id4 = Uuid::new_v4();
+
         contacts_hashmap.insert(
-            Uuid::parse_str("1").unwrap(),
-            Contact::new(
-                "Alice",
-                "123",
-                "alice@work.com",
-                vec!["work".into()],
-                Utc::now(),
-                Utc::now(),
-            ),
+            alice_id,
+            Contact {
+                id: alice_id,
+                name: "Alice".to_string(),
+                phone: vec!["123".into()],
+                email: "alice@work.com".to_string(),
+                tags: vec!["work".into()],
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+            },
         );
 
         contacts_hashmap.insert(
-            Uuid::parse_str("2").unwrap(),
-            Contact::new(
-                "Alicia",
-                "123",
-                "alicia@work.com",
-                vec!["work".into()],
-                Utc::now(),
-                Utc::now(),
-            ),
+            id2,
+            Contact {
+                id: id2,
+                name: "Alicia".to_string(),
+                phone: vec!["123".into()],
+                email: "alicia@work.com".to_string(),
+                tags: vec!["work".into()],
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+            },
         );
 
         contacts_hashmap.insert(
-            Uuid::parse_str("3").unwrap(),
-            Contact::new(
-                "Bob",
-                "456",
-                "bob@personal.com",
-                vec!["personal".into()],
-                Utc::now(),
-                Utc::now(),
-            ),
+            id3,
+            Contact {
+                id: id3,
+                name: "Bob".to_string(),
+                phone: vec!["456".into()],
+                email: "bob@personal.com".to_string(),
+                tags: vec!["personal".into()],
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+            },
         );
 
         contacts_hashmap.insert(
-            Uuid::parse_str("4").unwrap(),
-            Contact::new(
-                "Carol",
-                "789",
-                "carol@work.com",
-                vec!["work".into()],
-                Utc::now(),
-                Utc::now(),
-            ),
+            id4,
+            Contact {
+                id: id4,
+                name: "Carol".to_string(),
+                phone: vec!["789".into()],
+                email: "carol@work.com".to_string(),
+                tags: vec!["work".into()],
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+            },
         );
 
         // Contacts::new(contacts_hashmap)
-        contacts_hashmap
+        (alice_id, contacts_hashmap)
     }
 
     #[test]
@@ -445,45 +452,23 @@ mod tests {
 
     #[test]
     fn test_index_and_lookup() {
-        let contacts = sample_contacts2();
+        let (alice_id, contacts) = sample_contacts2();
         let index = Contacts::new(contacts);
 
-        // let position = index.lookup_name("Alice");
-        let dd = index.index.lookup_name("Alice");
+        let name_ids = index.index.lookup_name("Alice");
 
-        for id in dd {
-            let con = index.items.get(&id).unwrap();
-            assert_eq!(con.id, Uuid::parse_str("1").unwrap());
+        if let Some(d) = name_ids.iter().next() {
+            assert_eq!(d.clone(), alice_id);
         }
 
-        let nn = index.index.lookup_domain("work.com");
-
-        for id in nn {
-            let dom = index.items.get(&id).unwrap();
-            assert_eq!(dom.email, "alice@work.com");
-        }
-
-        // if let Some(id) = index.index.lookup_name("Alice").get("Alice")
-        //     && let Some(data) = index.items.get(id)
-        // {
-        //     assert_eq!(data.id, Uuid::parse_str("1").unwrap());
-        // };
-        
-        // if let Some(id) = index.index.lookup_domain("work.com").get("work.com")
-        //     && let Some(data) = index.items.get(id)
-        // {
-        //     assert_eq!(data.email, "alice@work.com");
-        // };
-
-        // let domain_results = index.lookup_domain("work.com");
-        //There are two contacts with "work.com" domain: Carol and Alice
-        // assert_eq!(domain_results.len(), 3);
+        let domain_ids = index.index.lookup_domain("work.com");
+        assert_eq!(domain_ids.len(), 3);
     }
 
     // fuzzy search
     #[test]
     fn test_exact_match_name() {
-        let contacts = sample_contacts2();
+        let (_alice_id, contacts) = sample_contacts2();
         let index = ContactsIndex::build(&contacts);
         let results = index.fuzzy_search("Alice", &contacts, 1);
         println!("Results {:?}", results);
