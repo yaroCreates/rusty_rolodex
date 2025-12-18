@@ -31,3 +31,7 @@ features = [
     "v4",
 ]
 
+[[bench]]
+name = "fuzzy_bench"
+harness = false
+

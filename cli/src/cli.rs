@@ -6,6 +6,7 @@ use rolodex_core::store::{ContactStore, FileStore, MergePolicy};
 use rolodex_core::validation::{
     ValidationResponse, validate_email, validate_name, validate_phone_number,
 };
+use uuid::Uuid;
 use std::env;
 
 // use crate::domain::{Contact, Contacts, export_csv, import_csv};
@@ -53,13 +54,13 @@ enum Commands {
     /// Delete a contact by name
     Delete {
         #[arg(long)]
-        id: String,
+        id: Uuid,
         // #[arg(long)]
         // phone: Option<String>,
     },
     Update {
         #[arg(long)]
-        id: String,
+        id: Uuid,
         // #[arg(long)]
         // phone: String,
         // #[arg(long, value_delimiter = ',')]
@@ -87,6 +88,8 @@ enum Commands {
         domain: Option<String>,
         #[arg(long)]
         fuzzy: Option<String>,
+        #[arg(long)]
+        concurrent: Option<String>,
     },
     Sync {
         #[arg(long)]
@@ -166,8 +169,6 @@ pub async fn run_command_cli() -> Result<(), AppError> {
             println!("✅ Added contact: {} ({})", name, email);
         }
         Commands::List { sort, tag, domain } => {
-            let contacts_vec = store.load()?;
-            let contacts = Contacts::new(contacts_vec);
 
             //Chain filters using iterator
             let mut filtered_contacts: Vec<&Contact> = contacts
@@ -226,8 +227,8 @@ pub async fn run_command_cli() -> Result<(), AppError> {
 
             // contacts.extend(imported);
             for mut c in imported {
-                c.id = uuid::Uuid::new_v4().to_string();
-                contacts.items.insert(c.id.clone(), c);
+                c.id = Uuid::new_v4();
+                contacts.items.insert(c.id, c);
             }
             store.save(contacts.items)?;
             println!("✅ Imported contacts from {}", path);
@@ -236,13 +237,9 @@ pub async fn run_command_cli() -> Result<(), AppError> {
             name,
             domain,
             fuzzy,
+            concurrent
         } => {
-            let name = name.unwrap_or_default();
-            let domain = domain.unwrap_or_default();
-            let fuzzy = fuzzy.unwrap_or_default();
-
-            // let _details = store.search(name, domain, fuzzy)?;
-            let _d = contacts.search(name, domain, fuzzy)?;
+            let _d = contacts.search(name, domain, fuzzy, concurrent)?;
         }
         Commands::Sync { file, policy } => {
             let merge_policy = match policy.as_str() {
@@ -283,6 +280,7 @@ mod tests {
     // use crate::store::mem::ContactsIndex;
 
     use rolodex_core::domain::ContactsIndex;
+    use uuid::uuid;
 
     use super::*;
 
@@ -290,7 +288,7 @@ mod tests {
         let mut contacts_hashmap = HashMap::new();
 
         contacts_hashmap.insert(
-            "1".to_string(),
+            Uuid::parse_str("1").unwrap(),
             Contact::new(
                 "Alice",
                 "123",
@@ -302,7 +300,7 @@ mod tests {
         );
 
         contacts_hashmap.insert(
-            "2".to_string(),
+            Uuid::parse_str("2").unwrap(),
             Contact::new(
                 "Bob",
                 "456",
@@ -314,7 +312,7 @@ mod tests {
         );
 
         contacts_hashmap.insert(
-            "3".to_string(),
+            Uuid::parse_str("3").unwrap(),
             Contact::new(
                 "Carol",
                 "789",
@@ -358,11 +356,11 @@ mod tests {
         // ])
     }
 
-    fn sample_contacts2() -> HashMap<String, Contact> {
-        let mut contacts_hashmap: HashMap<String, Contact> = HashMap::new();
+    fn sample_contacts2() -> HashMap<Uuid, Contact> {
+        let mut contacts_hashmap: HashMap<Uuid, Contact> = HashMap::new();
 
         contacts_hashmap.insert(
-            "1".to_string(),
+            Uuid::parse_str("1").unwrap(),
             Contact::new(
                 "Alice",
                 "123",
@@ -374,7 +372,7 @@ mod tests {
         );
 
         contacts_hashmap.insert(
-            "2".to_string(),
+            Uuid::parse_str("2").unwrap(),
             Contact::new(
                 "Alicia",
                 "123",
@@ -386,7 +384,7 @@ mod tests {
         );
 
         contacts_hashmap.insert(
-            "3".to_string(),
+            Uuid::parse_str("3").unwrap(),
             Contact::new(
                 "Bob",
                 "456",
@@ -398,7 +396,7 @@ mod tests {
         );
 
         contacts_hashmap.insert(
-            "4".to_string(),
+            Uuid::parse_str("4").unwrap(),
             Contact::new(
                 "Carol",
                 "789",
@@ -451,18 +449,31 @@ mod tests {
         let index = Contacts::new(contacts);
 
         // let position = index.lookup_name("Alice");
-        if let Some(id) = index.index.lookup_name("Alice").get("Alice")
-            && let Some(data) = index.items.get(id)
-        {
-            assert_eq!(data.id, "1".to_string());
-            // assert_eq!(data.email, "alice@work.com");
-        };
+        let dd = index.index.lookup_name("Alice");
 
-        if let Some(id) = index.index.lookup_domain("work.com").get("work.com")
-            && let Some(data) = index.items.get(id)
-        {
-            assert_eq!(data.email, "alice@work.com");
-        };
+        for id in dd {
+            let con = index.items.get(&id).unwrap();
+            assert_eq!(con.id, Uuid::parse_str("1").unwrap());
+        }
+
+        let nn = index.index.lookup_domain("work.com");
+
+        for id in nn {
+            let dom = index.items.get(&id).unwrap();
+            assert_eq!(dom.email, "alice@work.com");
+        }
+
+        // if let Some(id) = index.index.lookup_name("Alice").get("Alice")
+        //     && let Some(data) = index.items.get(id)
+        // {
+        //     assert_eq!(data.id, Uuid::parse_str("1").unwrap());
+        // };
+        
+        // if let Some(id) = index.index.lookup_domain("work.com").get("work.com")
+        //     && let Some(data) = index.items.get(id)
+        // {
+        //     assert_eq!(data.email, "alice@work.com");
+        // };
 
         // let domain_results = index.lookup_domain("work.com");
         //There are two contacts with "work.com" domain: Carol and Alice
@@ -473,8 +484,8 @@ mod tests {
     #[test]
     fn test_exact_match_name() {
         let contacts = sample_contacts2();
-        let index = ContactsIndex::build(contacts.clone());
-        let results = index.fuzzy_search("Alice", contacts, 1);
+        let index = ContactsIndex::build(&contacts);
+        let results = index.fuzzy_search("Alice", &contacts, 1);
         println!("Results {:?}", results);
         assert_eq!(results.len(), 1);
     }

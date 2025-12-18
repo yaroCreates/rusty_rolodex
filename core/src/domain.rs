@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use std::fs;
 
 // use crate::{domain::Contact, prelude::AppError};
@@ -53,8 +54,22 @@ impl AppState {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Contact {
+pub struct ContactRaw {
     pub id: String,
+    pub name: String,
+    pub phone: Vec<String>,
+    pub email: String,
+    #[serde(default)]
+    pub tags: Vec<String>,
+    #[serde(default)]
+    pub created_at: DateTime<Utc>,
+    #[serde(default)]
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Contact {
+    pub id: Uuid,
     pub name: String,
     pub phone: Vec<String>,
     pub email: String,
@@ -76,7 +91,7 @@ impl Contact {
         updated_at: DateTime<Utc>,
     ) -> Self {
         Self {
-            id: uuid::Uuid::new_v4().to_string(),
+            id: Uuid::new_v4(),
             name: name.to_string(),
             phone: vec![phone.to_string()],
             email: email.to_string(),
@@ -109,6 +124,20 @@ impl Contact {
     pub fn has_domain(&self, domain: &str) -> bool {
         self.email.ends_with(&format!("@{}", domain))
     }
+    pub fn from(raw: ContactRaw) -> Self {
+        let id = Uuid::parse_str(&raw.id)
+            .unwrap_or_else(|_| Uuid::new_v4());
+
+        Contact {
+            id,
+            name: raw.name,
+            phone: raw.phone,
+            email: raw.email,
+            tags: raw.tags,
+            created_at: raw.created_at,
+            updated_at: raw.updated_at,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -127,7 +156,7 @@ pub struct SpecialContact {
 
 #[derive(Debug)]
 pub struct Contacts {
-    pub items: HashMap<String, Contact>,
+    pub items: HashMap<Uuid, Contact>,
     pub index: ContactsIndex,
 }
 
@@ -145,8 +174,8 @@ pub struct JsonBinWrapper {
 // }
 
 impl Contacts {
-    pub fn new(items: HashMap<String, Contact>) -> Self {
-        let build_index = ContactsIndex::build(items.clone());
+    pub fn new(items: HashMap<Uuid, Contact>) -> Self {
+        let build_index = ContactsIndex::build(&items);
 
         Self {
             items,
@@ -166,7 +195,7 @@ impl Contacts {
             .name_map
             .entry(name_key)
             .or_default()
-            .insert(contact.id.clone());
+            .insert(contact.id);
 
         if let Some(domain) = contact.email.split("@").nth(1) {
             self.index
@@ -189,22 +218,26 @@ impl Contacts {
         {
             set.remove(&contact.id);
         }
+
+        let _ = &self.index.name_map.retain(|_key, set| !set.is_empty());
+
+        let _ = &self.index.domain_map.retain(|_key, set| !set.is_empty());
     }
 
-    pub fn update_index(&mut self, id: String) {
+    pub fn update_index(&mut self, id: Uuid) {
         let contact = self.items.get(&id).unwrap();
 
         self.index
             .name_map
             .entry(contact.name.clone())
             .or_default()
-            .insert(id.clone());
+            .insert(id);
 
         let domain = contact.email.split("@").nth(1).unwrap().to_string();
         self.index.domain_map.entry(domain).or_default().insert(id);
     }
 
-    pub fn find_with_name_phone(&self, name: &str, phone: Vec<String>) -> Option<String> {
+    pub fn find_with_name_phone(&self, name: &str, phone: Vec<String>) -> Option<Uuid> {
         let imported_phone_set: HashSet<_> = phone.iter().collect();
 
         self.index.name_map.get(name).and_then(|ids| {
@@ -227,9 +260,9 @@ impl Contacts {
             ));
         }
         println!("Index: {:?}", self.index);
-        contact.id = uuid::Uuid::new_v4().to_string();
+        contact.id = Uuid::new_v4();
 
-        self.items.insert(contact.id.clone(), contact.clone());
+        self.items.insert(contact.id, contact.clone());
         self.add_index(contact);
 
         println!("Name index after: {:?}", self.index.name_map);
@@ -237,7 +270,7 @@ impl Contacts {
         Ok(())
     }
 
-    pub fn delete(&mut self, id: String) -> Result<(), AppError> {
+    pub fn delete(&mut self, id: Uuid) -> Result<(), AppError> {
         let contact = self
             .items
             .remove(&id)
@@ -249,14 +282,30 @@ impl Contacts {
 
         Ok(())
     }
+    fn check_contact_before_updating(&self, contact: &Contact, new_name: &Option<String>, new_email: &Option<String>) -> Result<(), AppError> {
+        if let Some(n) = new_name.clone() 
+            && n == contact.name {
+                return Err(AppError::Validation(
+                    "Contact already has same name".to_string(),
+                ));
+        }
+
+        if let Some(e) = new_email.clone()
+            &&  e == contact.email {
+                return Err(AppError::Validation(
+                    "Contact already has same email address".to_string(),
+                ));
+        }
+        Ok(())
+    }
     pub fn update(
         &mut self,
-        id: String,
+        id: Uuid,
         new_name: Option<String>,
         new_phone: Option<String>,
         new_email: Option<String>,
     ) -> Result<(), AppError> {
-        if id.is_empty() {
+        if id.is_nil() {
             return Err(AppError::Validation(ValidationResponse::check_uuid()));
         }
 
@@ -265,6 +314,8 @@ impl Contacts {
             .get(&id)
             .cloned()
             .ok_or(AppError::Parse("Contact not found".to_string()))?;
+
+        self.check_contact_before_updating(&contact, &new_name, &new_email)?;
 
         self.remove_index(&contact);
 
@@ -279,7 +330,7 @@ impl Contacts {
         }
         contact.updated_at = Utc::now();
 
-        self.items.insert(contact.id.clone(), contact.clone());
+        self.items.insert(contact.id, contact.clone());
 
         self.add_index(contact.clone());
 
@@ -293,40 +344,47 @@ impl Contacts {
 
     pub fn search(
         &self,
-        name: String,
-        domain: String,
-        fuzzy: String,
+        name: Option<String>,
+        domain: Option<String>,
+        fuzzy: Option<String>,
+        concurrent: Option<String>,
     ) -> Result<Vec<Contact>, AppError> {
-        // let mut matches: Vec<usize> = Vec::new();
         let mut matches: Vec<Contact> = Vec::new();
 
-        if !name.is_empty() {
-            // matches.extend(self.lookup_name(&name));
-            if let Some(id) = self.index.lookup_name(&name).get(&name)
-                && let Some(data) = self.items.get(id)
-            {
-                matches.push(data.clone());
+        if let Some(name) = name {
+            let ids = self.index.lookup_name(&name);
+            for id in ids {
+                let result = self.items.get(&id).expect("Error");
+                matches.push(result.clone());
             }
+
         }
 
-        if !domain.is_empty() {
-            // matches.extend(self.lookup_domain(&domain));
-            if let Some(id) = self.index.lookup_domain(&domain).get(&domain)
-                && let Some(data) = self.items.get(id)
-            {
-                matches.push(data.clone());
+        if let Some(domain) = domain {
+            let ids = self.index.lookup_domain(&domain);
+            for id in ids {
+                let result = self.items.get(&id).expect("Error");
+                matches.push(result.clone());
             }
+
         }
 
-        if !fuzzy.is_empty() {
-            // if let Some(id) = self.index.fuzzy_search(query, contacts, 2) {
-
-            // }
-            let g = self.index.fuzzy_search(&fuzzy, self.items.clone(), 2);
-
+        if let Some(fuzzy) = fuzzy {
+            let g = self.index.fuzzy_search(&fuzzy, &self.items, 2);
+    
             for item in g {
-                matches.push(item);
+                matches.push(item.clone());
             }
+
+        }
+
+        if let Some(concurrent) = concurrent {
+            let g = self.index.fuzzy_search_concurrency(&concurrent, &self.items, 2);
+    
+            for item in g {
+                matches.push(item.clone());
+            }
+
         }
 
         println!("Matches {:?}", matches);
@@ -490,9 +548,9 @@ impl Contacts {
                         continue;
                     } else {
                         existing_keys.insert(key);
-                        contact.id = uuid::Uuid::new_v4().to_string();
+                        contact.id = Uuid::new_v4();
 
-                        self.items.insert(contact.id.clone(), contact.clone());
+                        self.items.insert(contact.id, contact.clone());
                         self.add_index(contact.clone());
                     }
                 }
@@ -500,14 +558,14 @@ impl Contacts {
                     if let Some(existing_id) =
                         self.find_with_name_phone(&contact.name, contact.phone.clone())
                     {
-                        contact.id = existing_id.clone();
-                        self.items.insert(existing_id.clone(), contact.clone());
+                        contact.id = existing_id;
+                        self.items.insert(existing_id, contact.clone());
                         self.remove_index(&contact.clone());
                         self.add_index(contact.clone());
                     } else {
-                        contact.id = uuid::Uuid::new_v4().to_string();
-                        self.items.insert(contact.id.clone(), contact.clone());
-                        self.update_index(contact.id.clone());
+                        contact.id = Uuid::new_v4();
+                        self.items.insert(contact.id, contact.clone());
+                        self.update_index(contact.id);
                     }
                 }
                 MergePolicy::Duplicate => {
@@ -519,9 +577,9 @@ impl Contacts {
                             existing_contact.phone.push(contact.phone.join(", "));
                         }
 
-                        contact.id = uuid::Uuid::new_v4().to_string();
+                        contact.id = Uuid::new_v4();
 
-                        self.items.insert(contact.id.clone(), contact.clone());
+                        self.items.insert(contact.id, contact.clone());
                         self.add_index(contact.clone());
                     }
                 }
@@ -568,7 +626,7 @@ impl Contacts {
 
 pub struct ContactsIter<'a> {
     // inner: std::slice::Iter<'a, Contact>,
-    inner: std::collections::hash_map::Values<'a, String, Contact>,
+    inner: std::collections::hash_map::Values<'a, Uuid, Contact>,
 }
 
 impl<'a> Iterator for ContactsIter<'a> {
@@ -613,28 +671,28 @@ pub fn import_csv(path: &str) -> Result<Vec<Contact>, AppError> {
 
 #[derive(Debug)]
 pub struct ContactsIndex {
-    name_map: HashMap<String, HashSet<String>>,
-    domain_map: HashMap<String, HashSet<String>>,
+    name_map: HashMap<String, HashSet<Uuid>>,
+    domain_map: HashMap<String, HashSet<Uuid>>,
 }
 
 impl ContactsIndex {
-    pub fn build(contacts: HashMap<String, Contact>) -> Self {
-        let mut name_map: HashMap<String, HashSet<String>> = HashMap::new();
-        let mut domain_map: HashMap<String, HashSet<String>> = HashMap::new();
+    pub fn build(contacts: &HashMap<Uuid, Contact>) -> Self {
+        let mut name_map: HashMap<String, HashSet<Uuid>> = HashMap::new();
+        let mut domain_map: HashMap<String, HashSet<Uuid>> = HashMap::new();
 
-        for contact in contacts.iter() {
-            let name_key = contact.1.name.to_lowercase();
+        for (_key, contact) in contacts.iter() {
+            let name_key = contact.name.to_lowercase();
             name_map
                 .entry(name_key)
                 .or_default()
-                .insert(contact.1.id.clone());
+                .insert(contact.id);
 
-            if let Some(domain) = contact.1.email.split('@').nth(1) {
+            if let Some(domain) = contact.email.split('@').nth(1) {
                 let domain_key = domain.to_lowercase();
                 domain_map
                     .entry(domain_key)
                     .or_default()
-                    .insert(contact.1.id.clone());
+                    .insert(contact.id);
             }
         }
 
@@ -644,27 +702,25 @@ impl ContactsIndex {
         }
     }
 
-    pub fn lookup_name(&self, name: &str) -> HashSet<String> {
+    pub fn lookup_name(&self, name: &str) -> HashSet<Uuid> {
         let key = name.to_lowercase();
-        // self.name_map.get(&key).cloned().unwrap_or_default()
-        self.name_map.get(&key).cloned().expect("Error!")
+        self.name_map.get(&key).cloned().unwrap_or_default()
     }
 
-    pub fn lookup_domain(&self, domain: &str) -> HashSet<String> {
+    pub fn lookup_domain(&self, domain: &str) -> HashSet<Uuid> {
         let key = domain.to_lowercase();
-        // self.domain_map.get(&key).cloned().unwrap_or_default()
-        self.domain_map.get(&key).cloned().expect("Error!")
+        self.domain_map.get(&key).cloned().unwrap_or_default()
     }
 
-    pub fn fuzzy_search(
+    pub fn fuzzy_search<'a>(
         &self,
         query: &str,
-        contacts: HashMap<String, Contact>,
+        contacts: &'a HashMap<Uuid, Contact>,
         max_edits: usize,
-    ) -> Vec<Contact> {
+    ) -> Vec<&'a Contact> {
         println!("Running fuzzy search...");
         let q = query.to_lowercase();
-        let mut results: Vec<Contact> = Vec::new();
+        let mut results: Vec<&Contact> = Vec::new();
 
         let contacts_x = contacts.values();
 
@@ -673,7 +729,7 @@ impl ContactsIndex {
             let email_distance = levenshtein(&q, &c.email.to_lowercase());
 
             if name_distance < max_edits || email_distance < max_edits {
-                results.push(c.clone());
+                results.push(c);
             }
         }
 
@@ -683,47 +739,59 @@ impl ContactsIndex {
     pub fn fuzzy_search_concurrency(
         &self,
         query: &str,
-        contacts: &[Contact],
+        contacts: &HashMap<Uuid, Contact>,
         max_edits: usize,
-    ) -> Vec<usize> {
+    ) -> Vec<Contact> {
         println!("Running fuzzy search with concurrency...");
         let num_threads = 4;
-        // let size_of_chunk = (contacts.len() + num_threads - 1) /num_threads;
-        let size_of_chunk = contacts.len().div_ceil(num_threads).div_ceil(num_threads);
         let query = query.to_lowercase();
 
+        let contacts_vec:Vec<Contact> = contacts.values().cloned().collect();
+        let total = contacts_vec.len();
+
+        if total == 0 {
+            return Vec::new();
+        }
+
+
+        // let size_of_chunk = (total + num_threads - 1) /num_threads;
+        let size_of_chunk = total.div_ceil(num_threads);
+        // let size_of_chunk = contacts.len().div_ceil(num_threads).div_ceil(num_threads);
+
         //Sharing data between threads
-        let contacts_arc = Arc::new(contacts.to_vec());
+        let contacts_arc = Arc::new(contacts_vec);
         let results = Arc::new(Mutex::new(Vec::new()));
 
         let mut handles = Vec::new();
 
         //Splitting into Chunks -> Spawn threads
-        for start_of_chunk in (0..contacts.len()).step_by(size_of_chunk) {
-            let end_of_chunk = usize::min(start_of_chunk + size_of_chunk, contacts.len());
-            let chunk_contacts = contacts_arc.clone();
-            let query_clone = query.clone();
+        for start_of_chunk in (0..total).step_by(size_of_chunk) {
+            
+            let end_of_chunk = usize::min(start_of_chunk + size_of_chunk, total);
+
+            let contacts_clone = Arc::clone(&contacts_arc);
             let results_clone = Arc::clone(&results);
+            let query_clone = query.clone();
 
             let handle = thread::spawn(move || {
                 let mut local_results = Vec::new();
 
                 //Each threads going to work!
-                for (i, c) in chunk_contacts[start_of_chunk..end_of_chunk]
-                    .iter()
-                    .enumerate()
+                for c in &contacts_clone[start_of_chunk..end_of_chunk]
+                    
                 {
                     let name_distance = levenshtein(&query_clone, &c.name.to_lowercase());
                     let email_distance = levenshtein(&query_clone, &c.email.to_lowercase());
 
                     if name_distance <= max_edits || email_distance <= max_edits {
-                        local_results.push(start_of_chunk + i);
+                        local_results.push(c.clone());
                     }
                 }
 
                 // Merge partial results
-                let mut global_results = results_clone.lock().unwrap();
-                global_results.extend(local_results);
+                // let mut global_results = results_clone.lock().unwrap();
+                // global_results.extend(local_results);
+                results_clone.lock().unwrap().extend(local_results);
             });
 
             handles.push(handle);

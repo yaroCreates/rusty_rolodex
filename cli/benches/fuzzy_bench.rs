@@ -1,23 +1,45 @@
-use chrono::Utc;
-use criterion::{Criterion, criterion_group, criterion_main};
-use rusty_rolodex::domain::{Contact, ContactsIndex};
+use std::collections::HashMap;
 
-fn bench_fuzzy_search(c: &mut Criterion) {
-    let contacts: Vec<_> = (0..10_000)
-        .map(|i| Contact {
+use chrono::Utc;
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
+use rolodex_core::domain::{Contact, ContactsIndex};
+use uuid::Uuid;
+
+fn build_contacts(count: usize) ->HashMap<Uuid, Contact> {
+    let mut map = HashMap::with_capacity(count);
+
+    for i in 0..count {
+        let id = Uuid::new_v4();
+        let now = Utc::now();
+
+        map.insert(id, Contact {
+            id,
             name: format!("Person{}", i),
             email: format!("person{}@mail.com", i),
             phone: vec![format!("232323323211")],
             tags: vec!["bench".into()],
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        })
-        .collect();
+            created_at: now,
+            updated_at: now,  
+        });
+    }
+    map
+}
+
+fn bench_fuzzy_search(c: &mut Criterion) {
+
+    let contacts = build_contacts(10_000);
 
     let index = ContactsIndex::build(&contacts);
 
+    c.bench_function("build 10k contacts", |b| {
+        b.iter(|| {
+            black_box(build_contacts(10_000));
+        })
+    });
+
     c.bench_function("name_lookup", |b| {
         b.iter(|| {
+            // let index = build_contacts(10_000);
             let _ = index.lookup_name("mail.com");
         })
     });

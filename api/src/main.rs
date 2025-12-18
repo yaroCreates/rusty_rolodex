@@ -12,6 +12,7 @@ use rolodex_core::{
     store::{ContactStore, FileStore},
 };
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecialContact {
@@ -62,13 +63,14 @@ async fn main() -> Result<(), AppError> {
 
         let guard = state.lock().unwrap();
 
-        let mut new_contacts: HashMap<String, Contact> = HashMap::new();
+        let mut new_contacts: HashMap<Uuid, Contact> = HashMap::new();
 
         for contact in payload.iter_mut() {
+            let uu_id = Uuid::new_v4();
             new_contacts.insert(
-                uuid::Uuid::new_v4().to_string(),
+                uu_id,
                 Contact {
-                    id: uuid::Uuid::new_v4().to_string(),
+                    id: uu_id,
                     name: contact.name.clone(),
                     phone: contact.phone.clone(),
                     email: contact.email.clone(),

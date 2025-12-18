@@ -5,13 +5,15 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use crate::{domain::Contact, error::AppError};
+use uuid::Uuid;
+
+use crate::{domain::{Contact, ContactRaw}, error::AppError};
 
 // const JSON_FILE_PATH: &str = "contacts.json";
 
 pub trait ContactStore: Send + Sync {
-    fn load(&self) -> Result<HashMap<String, Contact>, AppError>;
-    fn save(&self, contacts: HashMap<String, Contact>) -> Result<(), AppError>;
+    fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError>;
+    fn save(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError>;
     // fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError>;
     // fn merge_from_file(&self, other_path: &str, policy: MergePolicy) -> Result<(), AppError>;
 }
@@ -61,23 +63,27 @@ impl FileStore {
 }
 
 impl ContactStore for FileStore {
-    fn load(&self) -> Result<HashMap<String, Contact>, AppError> {
+    fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError> {
         // let path_json = Path::new(JSON_FILE_PATH);
         if !self.path.exists() {
             return Ok(HashMap::new());
         }
         let data = fs::read_to_string(&self.path)?;
-        let contacts: Vec<Contact> = serde_json::from_str(&data)
+        // let contacts: Vec<Contact> = serde_json::from_str(&data)
+        //     .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
+        let contacts: Vec<ContactRaw> = serde_json::from_str(&data)
             .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
 
-        let mut contacts_hashmap: HashMap<String, Contact> = HashMap::new();
-        for contact in contacts {
-            contacts_hashmap.insert(contact.id.clone(), contact);
+        let migrated_contacts:Vec<Contact> = contacts.into_iter().map(Contact::from).collect();
+
+        let mut contacts_hashmap: HashMap<Uuid, Contact> = HashMap::new();
+        for contact in migrated_contacts {
+            contacts_hashmap.insert(contact.id, contact);
         }
         Ok(contacts_hashmap)
     }
 
-    fn save(&self, contacts: HashMap<String, Contact>) -> Result<(), AppError> {
+    fn save(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError> {
         let _guard = self.lock.lock();
 
         let contacts_vec: Vec<Contact> = contacts.values().cloned().collect();
