@@ -188,7 +188,7 @@ impl Contacts {
         }
     }
 
-    pub fn add_index(&mut self, contact: Contact) {
+    pub fn add_index(&mut self, contact: &Contact) {
         let name_key = contact.name.to_lowercase();
         self.index
             .name_map
@@ -236,7 +236,7 @@ impl Contacts {
         self.index.domain_map.entry(domain).or_default().insert(id);
     }
 
-    pub fn find_with_name_phone(&self, name: &str, phone: Vec<String>) -> Option<Uuid> {
+    pub fn find_with_name_phone(&self, name: &str, phone: &Vec<String>) -> Option<Uuid> {
         let imported_phone_set: HashSet<_> = phone.iter().collect();
 
         self.index.name_map.get(name).and_then(|ids| {
@@ -262,7 +262,7 @@ impl Contacts {
         contact.id = Uuid::new_v4();
 
         self.items.insert(contact.id, contact.clone());
-        self.add_index(contact);
+        self.add_index(&contact);
 
         println!("Name index after: {:?}", self.index.name_map);
         println!("Domain index after: {:?}", self.index.domain_map);
@@ -338,7 +338,7 @@ impl Contacts {
 
         self.items.insert(contact.id, contact.clone());
 
-        self.add_index(contact.clone());
+        self.add_index(&contact);
 
         println!("✅ Contact updated");
 
@@ -555,17 +555,17 @@ impl Contacts {
                         contact.id = Uuid::new_v4();
 
                         self.items.insert(contact.id, contact.clone());
-                        self.add_index(contact.clone());
+                        self.add_index(&contact);
                     }
                 }
                 MergePolicy::Overwrite => {
                     if let Some(existing_id) =
-                        self.find_with_name_phone(&contact.name, contact.phone.clone())
+                        self.find_with_name_phone(&contact.name, &contact.phone)
                     {
                         contact.id = existing_id;
                         self.items.insert(existing_id, contact.clone());
-                        self.remove_index(&contact.clone());
-                        self.add_index(contact.clone());
+                        self.remove_index(&contact);
+                        self.add_index(&contact);
                     } else {
                         contact.id = Uuid::new_v4();
                         self.items.insert(contact.id, contact.clone());
@@ -575,7 +575,7 @@ impl Contacts {
                 MergePolicy::Duplicate => {
                     for (_key, mut existing_contact) in self.items.clone() {
                         if self
-                            .find_with_name_phone(&contact.name, contact.phone.clone())
+                            .find_with_name_phone(&contact.name, &contact.phone)
                             .is_some()
                         {
                             existing_contact.phone.push(contact.phone.join(", "));
@@ -584,7 +584,7 @@ impl Contacts {
                         contact.id = Uuid::new_v4();
 
                         self.items.insert(contact.id, contact.clone());
-                        self.add_index(contact.clone());
+                        self.add_index(&contact);
                     }
                 }
             }
