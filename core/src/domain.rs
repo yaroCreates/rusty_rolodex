@@ -236,7 +236,7 @@ impl Contacts {
         self.index.domain_map.entry(domain).or_default().insert(id);
     }
 
-    pub fn find_with_name_phone(&self, name: &str, phone: &Vec<String>) -> Option<Uuid> {
+    pub fn find_with_name_phone(&self, name: &str, phone: &[String]) -> Option<Uuid> {
         let imported_phone_set: HashSet<_> = phone.iter().collect();
 
         self.index.name_map.get(name).and_then(|ids| {
@@ -555,7 +555,7 @@ impl Contacts {
                         contact.id = Uuid::new_v4();
 
                         self.items.insert(contact.id, contact.clone());
-                        self.add_index(&contact);
+                        self.add_index(contact);
                     }
                 }
                 MergePolicy::Overwrite => {
@@ -564,8 +564,8 @@ impl Contacts {
                     {
                         contact.id = existing_id;
                         self.items.insert(existing_id, contact.clone());
-                        self.remove_index(&contact);
-                        self.add_index(&contact);
+                        self.remove_index(contact);
+                        self.add_index(contact);
                     } else {
                         contact.id = Uuid::new_v4();
                         self.items.insert(contact.id, contact.clone());
@@ -584,7 +584,7 @@ impl Contacts {
                         contact.id = Uuid::new_v4();
 
                         self.items.insert(contact.id, contact.clone());
-                        self.add_index(&contact);
+                        self.add_index(contact);
                     }
                 }
             }
