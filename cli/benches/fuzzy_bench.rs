@@ -29,13 +29,19 @@ fn build_contacts(count: usize) -> HashMap<Uuid, Contact> {
 }
 
 fn bench_fuzzy_search(c: &mut Criterion) {
-    let contacts = build_contacts(10_000);
+    let contacts = build_contacts(50_000);
 
     let index = ContactsIndex::build(&contacts);
 
-    c.bench_function("build 10k contacts", |b| {
+    c.bench_function("build 50k contacts", |b| {
         b.iter(|| {
-            black_box(build_contacts(10_000));
+            black_box(build_contacts(50_000));
+        })
+    });
+
+    c.bench_function("build indexes", |b| {
+        b.iter(|| {
+            black_box(ContactsIndex::build(&contacts));
         })
     });
 
