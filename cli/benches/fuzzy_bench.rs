@@ -69,6 +69,12 @@ fn bench_fuzzy_search(c: &mut Criterion) {
             let _ = index.fuzzy_search_concurrency("Person1234", &contacts, 2);
         })
     });
+
+    c.bench_function("fuzzy_search_concurrent 2", |b| {
+        b.iter(|| {
+            let _ = index.fuzzy_search_concurrency2("Person1234", &contacts, 2);
+        })
+    });
 }
 
 criterion_group!(benches, bench_fuzzy_search);

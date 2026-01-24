@@ -757,7 +757,7 @@ impl ContactsIndex {
 
         //Sharing data between threads
         let contacts_arc = Arc::new(contacts_vec);
-        let results = Arc::new(Mutex::new(Vec::new()));
+        let results: Arc<Mutex<Vec<Contact>>> = Arc::new(Mutex::new(Vec::new()));
 
         let mut handles = Vec::new();
 
@@ -798,5 +798,54 @@ impl ContactsIndex {
 
         // Get final results
         Arc::try_unwrap(results).unwrap().into_inner().unwrap()
+    }
+
+    pub fn fuzzy_search_concurrency2<'a>(
+        &self,
+        query: &str,
+        contacts: &'a HashMap<Uuid, Contact>,
+        max_edits: usize,
+    ) -> Vec<&'a Contact> {
+        let query = query.to_lowercase();
+        let values: Vec<&Contact> = contacts.values().collect();
+    
+        // let threads = std::thread::available_parallelism()
+        //     .map(|n| n.get())
+        //     .unwrap_or(1);
+        let threads = 4;
+    
+        let chunk_size = values.len().div_ceil(threads);
+        let mut results = Vec::new();
+    
+        thread::scope(|s| {
+            let mut handles = Vec::new();
+    
+            for chunk in values.chunks(chunk_size) {
+                let query = &query;
+    
+                handles.push(s.spawn(move || {
+                    let mut local = Vec::new();
+    
+                    for c in chunk {
+                        let name_distance =
+                            levenshtein(query, &c.name.to_lowercase());
+                        let email_distance =
+                            levenshtein(query, &c.email.to_lowercase());
+    
+                        if name_distance <= max_edits || email_distance <= max_edits {
+                            local.push(*c);
+                        }
+                    }
+    
+                    local
+                }));
+            }
+    
+            for h in handles {
+                results.extend(h.join().unwrap());
+            }
+        });
+    
+        results
     }
 }

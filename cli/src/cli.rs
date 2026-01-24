@@ -475,124 +475,44 @@ mod tests {
         assert_eq!(results.len(), 1);
     }
 
-    // benchmarking
-    // 1. Concurrent fuzzy search
-
-    /*
-
     #[test]
-    fn benchmark_fuzzy_search_concurrent() {
-        // Generate 10,000 fake contacts
-        let contacts: Vec<_> = (0..10_000)
-            .map(|i| Contact {
-                id: uuid::Uuid::new_v4().to_string(),
-                name: format!("Person{}", i),
-                email: format!("person{}@mail.com", i),
-                phone: vec![format!("232323323211")],
-                tags: vec!["bench".into()],
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-            })
-            .collect();
+    fn test_add_indexes() {
+        let (_id, contacts) = sample_contacts2();
+        let mut index = Contacts::new(contacts);
 
-        let index = ContactsIndex::build(&contacts);
-        let query = "Person1234";
-
-        let start = Instant::now();
-        let _results = index.fuzzy_search_concurrency(query, &contacts, 1);
-        let duration = start.elapsed();
-
-        println!(
-            "Concurrent fuzzy search completed in: {:?} ({} contacts)",
-            duration,
-            contacts.len()
+        let new_contact = Contact::new(
+            "Testing tester",
+             "123456788900",
+             "tester@testing.com",
+             vec!["tester".into()],
+             Utc::now(),
+             Utc::now(),
         );
 
-        // assert!(duration.as_secs_f64() < 0.5, "Search took too long!");
-    }
-    #[test]
-    fn benchmark_fuzzy_search() {
-        // Generate 10,000 fake contacts
-        let contacts: Vec<_> = (0..10_000)
-            .map(|i| Contact {
-                id: uuid::Uuid::new_v4().to_string(),
-                name: format!("Person{}", i),
-                email: format!("person{}@mail.com", i),
-                phone: vec![format!("232323323211")],
-                tags: vec!["bench".into()],
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-            })
-            .collect();
+        let _ = index.add(new_contact.clone());
 
-        let index = ContactsIndex::build(&contacts);
-        let query = "Person1234";
+        let ids = index.index.lookup_name(&new_contact.name);
 
-        let start = Instant::now();
-        let _results = index.fuzzy_search(query, &contacts, 2);
-        let duration = start.elapsed();
-
-        println!(
-            "Normal fuzzy search completed in: {:?} ({} contacts)",
-            duration,
-            contacts.len()
-        );
+        if let Some(d) = ids.iter().next() {
+            let get_contact = index.items.get(&d).unwrap();
+            assert_eq!(d.clone(), get_contact.id);
+        }
     }
 
     #[test]
-    fn benchmark_name_lookup() {
-        // Generate 10,000 fake contacts
-        let contacts: Vec<_> = (0..10_000)
-            .map(|i| Contact {
-                id: uuid::Uuid::new_v4().to_string(),
-                name: format!("Person{}", i),
-                email: format!("person{}@mail.com", i),
-                phone: vec![format!("232323323211")],
-                tags: vec!["bench".into()],
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-            })
-            .collect();
+    fn test_delete_indexes() {
+        let (_id, contacts) = sample_contacts2();
 
-        let index = ContactsIndex::build(&contacts);
-        let query = "Person1234";
+        let mut index = Contacts::new(contacts);
 
-        let start = Instant::now();
-        let _results = index.lookup_name(query);
-        let duration = start.elapsed();
+        let ids = index.index.lookup_name("alice");
+        
+        if let Some(value) = ids.iter().next() {
+            let _ = index.delete(value.clone());
+        }
+        
+        let ids = index.index.lookup_name("alice");
+        assert_eq!(ids.len(), 0);
 
-        println!(
-            "Name lookup search completed in: {:?} ({} contacts)",
-            duration,
-            contacts.len()
-        );
     }
-    #[test]
-    fn benchmark_domain_lookup() {
-        // Generate 10,000 fake contacts
-        let contacts: Vec<_> = (0..10_000)
-            .map(|i| Contact {
-                id: uuid::Uuid::new_v4().to_string(),
-                name: format!("Person{}", i),
-                email: format!("person{}@work.com", i),
-                phone: vec![format!("232323323211")],
-                tags: vec!["bench".into()],
-                created_at: Utc::now(),
-                updated_at: Utc::now(),
-            })
-            .collect();
-
-        let index = ContactsIndex::build(&contacts);
-        let query = "work.com";
-
-        let start = Instant::now();
-        let _results = index.lookup_domain(query);
-        let duration = start.elapsed();
-
-        println!(
-            "Domain lookup search completed in: {:?} ({} contacts)",
-            duration,
-            contacts.len()
-        );
-    } */
 }
