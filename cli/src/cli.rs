@@ -482,11 +482,11 @@ mod tests {
 
         let new_contact = Contact::new(
             "Testing tester",
-             "123456788900",
-             "tester@testing.com",
-             vec!["tester".into()],
-             Utc::now(),
-             Utc::now(),
+            "123456788900",
+            "tester@testing.com",
+            vec!["tester".into()],
+            Utc::now(),
+            Utc::now(),
         );
 
         let _ = index.add(new_contact.clone());
@@ -506,13 +506,12 @@ mod tests {
         let mut index = Contacts::new(contacts);
 
         let ids = index.index.lookup_name("alice");
-        
+
         if let Some(value) = ids.iter().next() {
             let _ = index.delete(value.clone());
         }
-        
+
         let ids = index.index.lookup_name("alice");
         assert_eq!(ids.len(), 0);
-
     }
 }
