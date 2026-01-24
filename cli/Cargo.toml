@@ -35,3 +35,6 @@ features = [
 name = "fuzzy_bench"
 harness = false
 
+[[bin]]
+name = "rolodex"
+path = "src/main.rs"
