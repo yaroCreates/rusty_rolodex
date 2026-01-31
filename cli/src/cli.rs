@@ -255,6 +255,7 @@ pub async fn run_command_cli() -> Result<(), AppError> {
             };
             // store.merge_from_file(&file, merge_policy)?;
             contacts.merge_from_file(&file, merge_policy)?;
+            // contacts.sync_from_file(&file, merge_policy)?;
             store.save(contacts.items)?;
             println!("✅ Sync complete using policy: {}", policy);
         }

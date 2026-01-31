@@ -18,7 +18,10 @@ use dotenv::dotenv;
 use fuzzy_search::distance::levenshtein;
 use reqwest::{Client, header::CONTENT_TYPE};
 
-use crate::{error::AppError, store::MergePolicy, validation::ValidationResponse};
+use crate::{
+    error::AppError, helpers::{completeness_score, merge_contact_data}, store::MergePolicy,
+    validation::ValidationResponse,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppState {
@@ -66,9 +69,9 @@ pub struct ContactRaw {
     #[serde(default)]
     pub updated_at: DateTime<Utc>,
 }
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
+    #[serde(default = "Uuid::new_v4")]
     pub id: Uuid,
     pub name: String,
     pub phone: Vec<String>,
@@ -139,6 +142,12 @@ impl Contact {
     }
 }
 
+impl PartialEq for Contact {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.phone == other.phone
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpecialContact {
     pub name: String,
@@ -162,6 +171,13 @@ pub struct Contacts {
 #[derive(serde::Deserialize, Debug)]
 pub struct JsonBinWrapper {
     pub record: Vec<Contact>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConflictResolution {
+    KeepLocal,
+    UseImported,
+    Merge,
 }
 
 // impl Iterator for Contacts {
@@ -239,7 +255,9 @@ impl Contacts {
     pub fn find_with_name_phone(&self, name: &str, phone: &[String]) -> Option<Uuid> {
         let imported_phone_set: HashSet<_> = phone.iter().collect();
 
-        self.index.name_map.get(name).and_then(|ids| {
+        let name_key = name.trim().to_lowercase();
+
+        self.index.name_map.get(&name_key).and_then(|ids| {
             ids.iter()
                 .find(|&id| {
                     if let Some(c) = self.items.get(id) {
@@ -521,64 +539,195 @@ impl Contacts {
         &mut self,
         other_path: &str,
         policy: MergePolicy,
+    ) -> Result<usize, AppError> {
+        let data = fs::read_to_string(other_path)?;
+
+        let imported_contacts: Vec<Contact> = serde_json::from_str(&data)
+            .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
+
+         // Create snapshot for rollback
+         let snapshot = self.create_snapshot();
+         let mut merged_count = 0;
+ 
+         let result = (|| -> Result<usize, AppError> {
+             for contact in imported_contacts {
+                 let merged = self.merge_single_contact(contact, &policy)?;
+                 println!("Merge counter:{}", merged);
+                 if merged {
+                     merged_count += 1;
+                 }
+             }
+             Ok(merged_count)
+         })();
+ 
+         // Rollback on error
+         if result.is_err() {
+             self.restore_snapshot(snapshot);
+         }
+ 
+         result
+    }
+
+    pub fn merge_single_contact(
+        &mut self,
+        mut contact: Contact,
+        policy: &MergePolicy,
+    ) -> Result<bool, AppError> {
+        // let key = (contact.name.clone(), contact.phone.clone());
+
+        let test = self.find_with_name_phone(&contact.name, &contact.phone);
+        println!("Testing: {:?}",test);
+
+        if let Some(existing_id) = self.find_with_name_phone(&contact.name, &contact.phone) {
+            println!("Existing id: {:?}", existing_id);
+            let existing = self.items.get(&existing_id).unwrap().clone();
+            println!("Existing contact: {:?}", existing);
+
+            match policy {
+                MergePolicy::Keep => {
+                    println!("Skipping duplicate: {}", contact.name);
+                    Ok(false)
+                }
+
+                MergePolicy::Overwrite => {
+                    let resolution = self.resolve_conflict(&existing, &contact);
+
+                    match resolution {
+                        ConflictResolution::KeepLocal => {
+                            println!("Keeping local version of: {}", contact.name);
+                            Ok(false)
+                        }
+                        ConflictResolution::UseImported => {
+                            // Update with imported data but keep the ID
+                            self.remove_index(&existing);
+                            contact.id = existing_id;
+                            contact.updated_at = Utc::now();
+                            self.items.insert(existing_id, contact.clone());
+                            self.add_index(&contact);
+                            println!("Overwrote with imported version: {}", contact.name);
+                            Ok(true)
+                        }
+                        ConflictResolution::Merge => {
+                            let merged = merge_contact_data(&existing, &contact);
+                            self.remove_index(&existing);
+                            self.items.insert(existing_id, merged.clone());
+                            self.add_index(&merged);
+                            println!("Merged data for: {}", contact.name);
+                            Ok(true)
+                        }
+                    }
+                }
+
+                MergePolicy::Duplicate => {
+                    // Create new entry with merged phone numbers
+                    let mut new_contact = contact.clone();
+                    new_contact.id = Uuid::new_v4();
+
+                    // Merge phone numbers from both
+                    let mut all_phones: HashSet<String> = existing.phone.iter().cloned().collect();
+                    all_phones.extend(contact.phone.iter().cloned());
+                    new_contact.phone = all_phones.into_iter().collect();
+
+                    new_contact.created_at = Utc::now();
+                    new_contact.updated_at = Utc::now();
+
+                    self.items.insert(new_contact.id, new_contact.clone());
+                    self.add_index(&new_contact);
+                    println!("Created duplicate entry for: {}", contact.name);
+                    Ok(true)
+                }
+            }
+        } else {
+            // new contact
+            contact.id = Uuid::new_v4();
+            contact.created_at = Utc::now();
+            contact.updated_at = Utc::now();
+            self.items.insert(contact.id, contact.clone());
+            self.add_index(&contact);
+            println!("Added new contact: {}", contact.name);
+            Ok(true)
+        }
+    }
+
+    pub fn resolve_conflict(&self, local: &Contact, imported: &Contact) -> ConflictResolution {
+        // 1. Check timestamps
+        if imported.updated_at > local.updated_at {
+            // Imported is newer
+            if self.is_more_complete(imported, local) {
+                return ConflictResolution::UseImported;
+            } else if self.is_more_complete(local, imported) {
+                return ConflictResolution::Merge;
+            } else {
+                return ConflictResolution::UseImported;
+            }
+        } else if local.updated_at > imported.updated_at {
+            // Local is newer
+            if self.is_more_complete(local, imported) {
+                return ConflictResolution::KeepLocal;
+            } else if self.is_more_complete(imported, local) {
+                return ConflictResolution::Merge;
+            } else {
+                return ConflictResolution::KeepLocal;
+            }
+        }
+
+        // 2. Same timestamp - compare completeness
+        if self.is_more_complete(imported, local) {
+            ConflictResolution::UseImported
+        } else if self.is_more_complete(local, imported) {
+            ConflictResolution::KeepLocal
+        } else {
+            // Equal completeness - merge
+            ConflictResolution::Merge
+        }
+    }
+
+    pub fn is_more_complete(&self, a: &Contact, b: &Contact) -> bool {
+        let a_score = completeness_score(a);
+        let b_score = completeness_score(b);
+        a_score > b_score
+    }
+
+    pub fn sync_from_file(
+        &mut self,
+        other_path: &str,
+        policy: MergePolicy,
     ) -> Result<(), AppError> {
         let data = fs::read_to_string(other_path)?;
 
         let mut imported_contacts: Vec<Contact> = serde_json::from_str(&data)
             .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
-
-        let mut existing_keys: HashSet<(String, Vec<String>)> = self
-            .items
-            .iter()
-            .map(|c| (c.1.name.clone(), c.1.phone.clone()))
-            .collect();
+        println!("Passed Serde: {:?}", imported_contacts);
 
         for contact in imported_contacts.iter_mut() {
-            let key = (contact.name.clone(), contact.phone.clone());
-
-            // let name_key = contact.name.clone();
-            // let imported_phone_set: HashSet<_> = contact.phone.iter().collect();
-
-            // let domain_key = contact
-            //     .email
-            //     .split("@")
-            //     .nth(1)
-            //     .unwrap_or_default()
-            //     .to_string();
-
-            match policy {
-                MergePolicy::Keep => {
-                    if existing_keys.contains(&key) {
-                        continue;
-                    } else {
-                        existing_keys.insert(key);
-                        contact.id = Uuid::new_v4();
-
-                        self.items.insert(contact.id, contact.clone());
-                        self.add_index(contact);
+            if let Some(local_contact) = self.items.get_mut(&contact.id) {
+                println!("local contact before policies: {:?}", local_contact);
+                match policy {
+                    MergePolicy::Keep => {
+                        if local_contact == contact {
+                            continue;
+                        } else {
+                            contact.id = Uuid::new_v4();
+                            self.add(contact.clone())?;
+                        }
                     }
-                }
-                MergePolicy::Overwrite => {
-                    if let Some(existing_id) =
-                        self.find_with_name_phone(&contact.name, &contact.phone)
-                    {
-                        contact.id = existing_id;
-                        self.items.insert(existing_id, contact.clone());
-                        self.remove_index(contact);
-                        self.add_index(contact);
-                    } else {
-                        contact.id = Uuid::new_v4();
-                        self.items.insert(contact.id, contact.clone());
-                        self.update_index(contact.id);
-                    }
-                }
-                MergePolicy::Duplicate => {
-                    for (_key, mut existing_contact) in self.items.clone() {
-                        if self
-                            .find_with_name_phone(&contact.name, &contact.phone)
-                            .is_some()
+                    MergePolicy::Overwrite => {
+                        if let Some(existing_id) =
+                            self.find_with_name_phone(&contact.name, &contact.phone)
                         {
-                            existing_contact.phone.push(contact.phone.join(", "));
+                            contact.id = existing_id;
+                            self.items.insert(existing_id, contact.clone());
+                            self.remove_index(contact);
+                            self.add_index(contact);
+                        } else {
+                            contact.id = Uuid::new_v4();
+                            self.items.insert(contact.id, contact.clone());
+                            self.update_index(contact.id);
+                        }
+                    }
+                    MergePolicy::Duplicate => {
+                        if local_contact == contact {
+                            local_contact.phone.push(contact.phone.join(", "));
                         }
 
                         contact.id = Uuid::new_v4();
@@ -589,8 +738,20 @@ impl Contacts {
                 }
             }
         }
-        // self.save(&existing_contacts)?;
         Ok(())
+    }
+
+    fn create_snapshot(&self) -> ContactsSnapshot {
+        ContactsSnapshot {
+            items: self.items.clone(),
+            index: ContactsIndex::build(&self.items),
+        }
+    }
+
+    fn restore_snapshot(&mut self, snapshot: ContactsSnapshot) {
+        self.items = snapshot.items;
+        self.index = snapshot.index;
+        println!("⚠️  Rollback performed due to error");
     }
 
     pub fn check_contact_exist(&self, new_contact: &Contact) -> bool {
@@ -673,7 +834,7 @@ pub fn import_csv(path: &str) -> Result<Vec<Contact>, AppError> {
     Ok(contacts)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ContactsIndex {
     name_map: HashMap<String, HashSet<Uuid>>,
     domain_map: HashMap<String, HashSet<Uuid>>,
@@ -846,4 +1007,11 @@ impl ContactsIndex {
 
         results
     }
+}
+
+/// Snapshot structure for rollback capability
+#[derive(Debug, Clone)]
+struct ContactsSnapshot {
+    items: HashMap<Uuid, Contact>,
+    index: ContactsIndex,
 }
