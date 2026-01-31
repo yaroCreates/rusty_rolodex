@@ -3,7 +3,7 @@
 
 #[cfg(test)]
 mod merge_sync_tests {
-    use super::*;
+    // use super::*;
     use chrono::{Duration, Utc};
     use rolodex_core::domain::{Contact, Contacts};
     use rolodex_core::store::MergePolicy;
@@ -38,25 +38,25 @@ mod merge_sync_tests {
     }
 
     /// Create a contact with specific ID
-    fn create_contact_with_id(
-        id: Uuid,
-        name: &str,
-        phone: Vec<&str>,
-        email: &str,
-        tags: Vec<&str>,
-        days_ago_updated: i64,
-    ) -> Contact {
-        let now = Utc::now();
-        Contact {
-            id,
-            name: name.to_string(),
-            phone: phone.iter().map(|s| s.to_string()).collect(),
-            email: email.to_string(),
-            tags: tags.iter().map(|s| s.to_string()).collect(),
-            created_at: now - Duration::days(10),
-            updated_at: now - Duration::days(days_ago_updated),
-        }
-    }
+    // fn create_contact_with_id(
+    //     id: Uuid,
+    //     name: &str,
+    //     phone: Vec<&str>,
+    //     email: &str,
+    //     tags: Vec<&str>,
+    //     days_ago_updated: i64,
+    // ) -> Contact {
+    //     let now = Utc::now();
+    //     Contact {
+    //         id,
+    //         name: name.to_string(),
+    //         phone: phone.iter().map(|s| s.to_string()).collect(),
+    //         email: email.to_string(),
+    //         tags: tags.iter().map(|s| s.to_string()).collect(),
+    //         created_at: now - Duration::days(10),
+    //         updated_at: now - Duration::days(days_ago_updated),
+    //     }
+    // }
 
     /// Initialize Contacts with test data
     fn create_test_contacts(contacts: Vec<Contact>) -> Contacts {
@@ -110,7 +110,7 @@ mod merge_sync_tests {
     //     assert!(result.is_ok());
     //     assert_eq!(result.unwrap(), 0); // 0 merged (skipped)
     //     assert_eq!(contacts.items.len(), 1);
-        
+
     //     // Original contact unchanged
     //     let stored = contacts.items.values().next().unwrap();
     //     assert_eq!(stored.email, "john@example.com");
@@ -142,13 +142,14 @@ mod merge_sync_tests {
         let import_file = write_contacts_to_file(vec![import_contact]);
 
         // Execute
-        let result = contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Keep);
+        let result =
+            contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Keep);
 
         // Assert
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1); // 1 added
         assert_eq!(contacts.items.len(), 2);
-        
+
         // Both contacts exist
         let names: Vec<String> = contacts.items.values().map(|c| c.name.clone()).collect();
         assert!(names.contains(&"John Doe".to_string()));
@@ -185,13 +186,14 @@ mod merge_sync_tests {
         let import_file = write_contacts_to_file(vec![import_contact]);
 
         // Execute
-        let result = contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Overwrite);
+        let result =
+            contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Overwrite);
 
         // Assert
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1); // 1 updated
         assert_eq!(contacts.items.len(), 1);
-        
+
         // Contact was overwritten with newer data
         let stored = contacts.items.values().next().unwrap();
         assert_eq!(stored.email, "john.new@example.com");
@@ -225,13 +227,14 @@ mod merge_sync_tests {
         let import_file = write_contacts_to_file(vec![import_contact]);
 
         // Execute
-        let result = contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Overwrite);
+        let result =
+            contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Overwrite);
 
         // Assert
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 0); // 0 updated (kept local)
         assert_eq!(contacts.items.len(), 1);
-        
+
         // Local contact unchanged
         let stored = contacts.items.values().next().unwrap();
         assert_eq!(stored.email, "john.new@example.com");
@@ -263,7 +266,7 @@ mod merge_sync_tests {
     //     );
     //     // Force same updated_at
     //     import_contact.updated_at = contacts.items.get(&original_id).unwrap().updated_at;
-        
+
     //     let import_file = write_contacts_to_file(vec![import_contact]);
 
     //     // Execute
@@ -272,7 +275,7 @@ mod merge_sync_tests {
     //     // Assert
     //     assert!(result.is_ok());
     //     assert_eq!(result.unwrap(), 1);
-        
+
     //     // More complete version should win
     //     let stored = contacts.items.values().next().unwrap();
     //     assert_eq!(stored.name, "John Doe");
@@ -300,23 +303,22 @@ mod merge_sync_tests {
             "John Doe",
             vec!["0987654321"], // Different phone
             "john@example.com",
-            vec!["work"],       // Different tag
+            vec!["work"], // Different tag
             8,
             5, // Older, but has more complete data in phone/tags
         );
         let import_file = write_contacts_to_file(vec![import_contact]);
 
         // Execute
-        let result = contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Overwrite);
+        let result =
+            contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Overwrite);
 
         // Assert
         assert!(result.is_ok());
-        
+
         // If both have valuable data, they should be merged
         // (behavior depends on resolve_conflict logic)
         let stored = contacts.items.values().next().unwrap();
         assert_eq!(stored.id, original_id);
     }
-
-
 }

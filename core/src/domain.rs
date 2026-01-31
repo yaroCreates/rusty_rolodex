@@ -19,7 +19,9 @@ use fuzzy_search::distance::levenshtein;
 use reqwest::{Client, header::CONTENT_TYPE};
 
 use crate::{
-    error::AppError, helpers::{completeness_score, merge_contact_data}, store::MergePolicy,
+    error::AppError,
+    helpers::{completeness_score, merge_contact_data},
+    store::MergePolicy,
     validation::ValidationResponse,
 };
 
@@ -545,27 +547,27 @@ impl Contacts {
         let imported_contacts: Vec<Contact> = serde_json::from_str(&data)
             .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
 
-         // Create snapshot for rollback
-         let snapshot = self.create_snapshot();
-         let mut merged_count = 0;
- 
-         let result = (|| -> Result<usize, AppError> {
-             for contact in imported_contacts {
-                 let merged = self.merge_single_contact(contact, &policy)?;
-                 println!("Merge counter:{}", merged);
-                 if merged {
-                     merged_count += 1;
-                 }
-             }
-             Ok(merged_count)
-         })();
- 
-         // Rollback on error
-         if result.is_err() {
-             self.restore_snapshot(snapshot);
-         }
- 
-         result
+        // Create snapshot for rollback
+        let snapshot = self.create_snapshot();
+        let mut merged_count = 0;
+
+        let result = (|| -> Result<usize, AppError> {
+            for contact in imported_contacts {
+                let merged = self.merge_single_contact(contact, &policy)?;
+                println!("Merge counter:{}", merged);
+                if merged {
+                    merged_count += 1;
+                }
+            }
+            Ok(merged_count)
+        })();
+
+        // Rollback on error
+        if result.is_err() {
+            self.restore_snapshot(snapshot);
+        }
+
+        result
     }
 
     pub fn merge_single_contact(
@@ -576,7 +578,7 @@ impl Contacts {
         // let key = (contact.name.clone(), contact.phone.clone());
 
         let test = self.find_with_name_phone(&contact.name, &contact.phone);
-        println!("Testing: {:?}",test);
+        println!("Testing: {:?}", test);
 
         if let Some(existing_id) = self.find_with_name_phone(&contact.name, &contact.phone) {
             println!("Existing id: {:?}", existing_id);
