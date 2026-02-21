@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use chrono::Utc;
 
-use crate::domain::Contact;
+use crate::domain::{ConflictResolution, Contact};
 
 pub fn merge_contact_data(local: &Contact, imported: &Contact) -> Contact {
     let mut merged = local.clone();
@@ -40,6 +40,39 @@ pub fn merge_contact_data(local: &Contact, imported: &Contact) -> Contact {
     merged
 }
 
+pub fn resolve_conflict(local: &Contact, imported: &Contact) -> ConflictResolution {
+    // 1. Check timestamps
+    if imported.updated_at > local.updated_at {
+        // Imported is newer
+        if is_more_complete(imported, local) {
+            return ConflictResolution::UseImported;
+        } else if is_more_complete(local, imported) {
+            return ConflictResolution::Merge;
+        } else {
+            return ConflictResolution::UseImported;
+        }
+    } else if local.updated_at > imported.updated_at {
+        // Local is newer
+        if is_more_complete(local, imported) {
+            return ConflictResolution::KeepLocal;
+        } else if is_more_complete(imported, local) {
+            return ConflictResolution::Merge;
+        } else {
+            return ConflictResolution::KeepLocal;
+        }
+    }
+
+    // 2. Same timestamp - compare completeness
+    if is_more_complete(imported, local) {
+        ConflictResolution::UseImported
+    } else if is_more_complete(local, imported) {
+        ConflictResolution::KeepLocal
+    } else {
+        // Equal completeness - merge
+        ConflictResolution::Merge
+    }
+}
+
 pub fn completeness_score(contact: &Contact) -> usize {
     let mut score = 0;
 
@@ -63,4 +96,10 @@ pub fn completeness_score(contact: &Contact) -> usize {
     score += contact.tags.len();
 
     score
+}
+
+pub fn is_more_complete(a: &Contact, b: &Contact) -> bool {
+    let a_score = completeness_score(a);
+    let b_score = completeness_score(b);
+    a_score > b_score
 }

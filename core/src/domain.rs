@@ -16,11 +16,11 @@ use chrono::{DateTime, Utc};
 use csv::{ReaderBuilder, Writer};
 use dotenv::dotenv;
 use fuzzy_search::distance::levenshtein;
-use reqwest::{Client, header::CONTENT_TYPE};
+use reqwest::{blocking::Client, header::CONTENT_TYPE};
 
 use crate::{
     error::AppError,
-    helpers::{completeness_score, merge_contact_data},
+    helpers::{merge_contact_data, resolve_conflict},
     store::MergePolicy,
     validation::ValidationResponse,
 };
@@ -433,7 +433,7 @@ impl Contacts {
         Ok(matches)
     }
 
-    pub async fn import_from_remote(&mut self, from: String) -> Result<(), AppError> {
+    pub fn import_from_remote(&mut self, from: String) -> Result<(), AppError> {
         let client = Client::new();
         let response = client
             .get(&from)
@@ -441,14 +441,18 @@ impl Contacts {
                 "X-Master-Key",
                 "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
             )
-            .send()
-            .await?;
+            .send()?;
 
         if response.status() == 200 {
             let remote_contacts = response
                 .json::<JsonBinWrapper>()
-                .await
                 .map_err(|e| AppError::Parse(format!("Invalid JSON: {}", e)))?;
+
+            println!(
+                "✅ Successfully imported {} contacts to {}",
+                remote_contacts.record.len(),
+                from
+            );
 
             for contact in remote_contacts.record {
                 self.add(contact)?;
@@ -462,7 +466,7 @@ impl Contacts {
         Ok(())
     }
 
-    pub async fn export_to_remote(self, to: String) -> Result<(), AppError> {
+    pub fn export_to_remote(self, to: String) -> Result<(), AppError> {
         dotenv().ok();
 
         let master_key = env::var("MASTER_KEY").expect("Error: Master key must be set");
@@ -478,8 +482,7 @@ impl Contacts {
                 "X-Master-Key",
                 "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
             )
-            .send()
-            .await?;
+            .send()?;
 
         println!("Response from export: {:?}", response);
         // response.status();
@@ -495,47 +498,49 @@ impl Contacts {
         Ok(())
     }
 
-    pub async fn async_export(self, to: String) -> Result<(), AppError> {
-        let client = Client::new();
-        let response = client
-            .post(&to)
-            .json(&self.items)
-            .header(CONTENT_TYPE, "application/json")
-            .send()
-            .await?;
+    // pub async fn async_export(self, to: String) -> Result<(), AppError> {
+    //     let client = Client::new();
+    //     let response = client
+    //         .post(&to)
+    //         .json(&self.items)
+    //         .header(CONTENT_TYPE, "application/json")
+    //         .send()
+    //         .await?;
 
-        let res = response.json::<Vec<SpecialContact>>().await?;
-        println!("Response from export: {:?}", res);
+    //     let res = response.json::<Vec<SpecialContact>>().await?;
+    //     println!("Response from export: {:?}", res);
 
-        let data = serde_json::to_string_pretty(&res)
-            .map_err(|e| AppError::Parse(format!("Saving error...: {}", e)))?;
-        fs::write("export_contacts.json", data)?;
+    //     let data = serde_json::to_string_pretty(&res)
+    //         .map_err(|e| AppError::Parse(format!("Saving error...: {}", e)))?;
+    //     fs::write("export_contacts.json", data)?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
-    pub async fn async_check(&mut self, from: String) -> Result<(), AppError> {
-        let client = Client::new();
-        let response = client
-            .get(&from)
-            // .header(
-            //     "X-Master-Key",
-            //     "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
-            // )
-            .send()
-            .await?;
+    // pub async fn async_check(&mut self, from: String) -> Result<(), AppError> {
+    //     let client = Client::new();
+    //     let response = client
+    //         .get(&from)
+    //         // .header(
+    //         //     "X-Master-Key",
+    //         //     "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
+    //         // )
+    //         .send()
+    //         .await?;
 
-        // let response = reqwest::get(from).await?;
+    //     // let response = reqwest::get(from).await?;
+    //     // println!("import response: {:?}", response.text().await);
 
-        let data = response.json::<Vec<Contact>>().await;
-        println!("This is the response: {:?}", data);
+    //     // let data = response.json::<Vec<Contact>>().await;
+    //     let data = response.json::<Vec<Contact>>().await;
+    //     println!("This is the response: {:#?}", data);
 
-        for contact in data? {
-            self.add(contact)?;
-        }
+    //     // for contact in data? {
+    //     //     self.add(contact)?;
+    //     // }
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
     pub fn merge_from_file(
         &mut self,
@@ -592,7 +597,7 @@ impl Contacts {
                 }
 
                 MergePolicy::Overwrite => {
-                    let resolution = self.resolve_conflict(&existing, &contact);
+                    let resolution = resolve_conflict(&existing, &contact);
 
                     match resolution {
                         ConflictResolution::KeepLocal => {
@@ -627,8 +632,10 @@ impl Contacts {
 
                     // Merge phone numbers from both
                     let mut all_phones: HashSet<String> = existing.phone.iter().cloned().collect();
+                    println!("Existing phone number: {:?}", all_phones);
                     all_phones.extend(contact.phone.iter().cloned());
                     new_contact.phone = all_phones.into_iter().collect();
+                    println!("New contact phone number: {:?}", new_contact.phone);
 
                     new_contact.created_at = Utc::now();
                     new_contact.updated_at = Utc::now();
@@ -642,52 +649,13 @@ impl Contacts {
         } else {
             // new contact
             contact.id = Uuid::new_v4();
-            contact.created_at = Utc::now();
+            // contact.created_at = Utc::now();
             contact.updated_at = Utc::now();
             self.items.insert(contact.id, contact.clone());
             self.add_index(&contact);
             println!("Added new contact: {}", contact.name);
             Ok(true)
         }
-    }
-
-    pub fn resolve_conflict(&self, local: &Contact, imported: &Contact) -> ConflictResolution {
-        // 1. Check timestamps
-        if imported.updated_at > local.updated_at {
-            // Imported is newer
-            if self.is_more_complete(imported, local) {
-                return ConflictResolution::UseImported;
-            } else if self.is_more_complete(local, imported) {
-                return ConflictResolution::Merge;
-            } else {
-                return ConflictResolution::UseImported;
-            }
-        } else if local.updated_at > imported.updated_at {
-            // Local is newer
-            if self.is_more_complete(local, imported) {
-                return ConflictResolution::KeepLocal;
-            } else if self.is_more_complete(imported, local) {
-                return ConflictResolution::Merge;
-            } else {
-                return ConflictResolution::KeepLocal;
-            }
-        }
-
-        // 2. Same timestamp - compare completeness
-        if self.is_more_complete(imported, local) {
-            ConflictResolution::UseImported
-        } else if self.is_more_complete(local, imported) {
-            ConflictResolution::KeepLocal
-        } else {
-            // Equal completeness - merge
-            ConflictResolution::Merge
-        }
-    }
-
-    pub fn is_more_complete(&self, a: &Contact, b: &Contact) -> bool {
-        let a_score = completeness_score(a);
-        let b_score = completeness_score(b);
-        a_score > b_score
     }
 
     pub fn sync_from_file(

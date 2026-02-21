@@ -1,8 +1,15 @@
 use rolodex_cli::cli::run_command_cli;
 
-#[tokio::main]
-pub async fn main() {
-    if let Err(err) = run_command_cli().await {
+// #[tokio::main]
+// pub async fn main() {
+//     if let Err(err) = run_command_cli().await {
+//         eprintln!("Error: {}", err);
+//         std::process::exit(1);
+//     }
+// }
+
+pub fn main() {
+    if let Err(err) = run_command_cli() {
         eprintln!("Error: {}", err);
         std::process::exit(1);
     }

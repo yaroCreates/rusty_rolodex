@@ -2,7 +2,7 @@ use chrono::Utc;
 use clap::{Parser, Subcommand};
 use rolodex_core::domain::{Contact, Contacts, export_csv, import_csv};
 use rolodex_core::error::AppError;
-use rolodex_core::store::{ContactStore, FileStore, MergePolicy};
+use rolodex_core::store::{ContactStore, FileStore, MemStore, MergePolicy, RemoteStore};
 use rolodex_core::validation::{
     ValidationResponse, validate_email, validate_name, validate_phone_number,
 };
@@ -118,21 +118,17 @@ enum Commands {
 // }
 
 fn get_store() -> Box<dyn ContactStore> {
-    // match env::var("STORE_TYPE")
-    //     .unwrap_or("file".to_string())
-    //     .as_str()
-    // {
-    //     "mem" => Box::new(),
-    //     _ => Box::new(FileStore::new("contacts.json")),
-    // }
+    let binding = env::var("STORE_TYPE").unwrap_or("file".to_string());
+    let env = binding.as_str();
 
-    let _ = env::var("STORE_TYPE")
-        .unwrap_or("file".to_string())
-        .as_str();
-    Box::new(FileStore::new("contacts.json"))
+    match env {
+        "mem" => Box::new(MemStore::new()),
+        "remote" => Box::new(RemoteStore::new()),
+        _ => Box::new(FileStore::new("contacts.json")),
+    }
 }
 
-pub async fn run_command_cli() -> Result<(), AppError> {
+pub fn run_command_cli() -> Result<(), AppError> {
     let cli = Cli::parse();
     let store = get_store();
     // let store = FsStore::new("contacts.json");
@@ -261,10 +257,11 @@ pub async fn run_command_cli() -> Result<(), AppError> {
         }
         Commands::Export { to } => {
             // contacts.export_to_remote(to).await?;
-            contacts.async_export(to).await?;
+            contacts.export_to_remote(to)?;
         }
         Commands::Import { from } => {
-            contacts.async_check(from).await?;
+            // contacts.async_check(from).await?;
+            contacts.import_from_remote(from)?;
             store.save(contacts.items)?;
         }
     }

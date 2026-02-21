@@ -5,50 +5,70 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use chrono::Utc;
+use reqwest::blocking::Client;
 use uuid::Uuid;
 
 use crate::{
-    domain::{Contact, ContactRaw},
+    domain::{Contact, ContactRaw, JsonBinWrapper},
     error::AppError,
 };
 
 // const JSON_FILE_PATH: &str = "contacts.json";
 
-pub trait ContactStore: Send + Sync {
+// pub trait ContactStore: Send + Sync {
+//     fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError>;
+//     fn save(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError>;
+//     // fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError>;
+//     // fn merge_from_file(&self, other_path: &str, policy: MergePolicy) -> Result<(), AppError>;
+// }
+pub trait ContactStore {
     fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError>;
     fn save(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError>;
-    // fn search(&self, name: String, domain: String, fuzzy: String) -> Result<Vec<usize>, AppError>;
-    // fn merge_from_file(&self, other_path: &str, policy: MergePolicy) -> Result<(), AppError>;
 }
 
-// pub struct MemStore {
-//     contacts: std::cell::RefCell<HashMap<String, Contact>>,
-// }
+pub struct MemStore {
+    contacts: std::cell::RefCell<HashMap<Uuid, Contact>>,
+}
 
-// #[allow(clippy::new_without_default)]
-// impl MemStore {
-//     pub fn new() -> Self {
-//         Self {
-//             contacts: std::cell::RefCell::new(HashMap::new()),
-//         }
-//     }
-// }
+#[allow(clippy::new_without_default)]
+impl MemStore {
+    pub fn new() -> Self {
+        let sample_contacts = Contact::new(
+            "name",
+            "0987654321",
+            "name-phone@gmail.com",
+            vec![],
+            Utc::now(),
+            Utc::now(),
+        );
 
-// impl ContactStore for MemStore {
-//     fn load(&self) -> Result<HashMap<String, Contact>, AppError> {
-//         Ok(self.contacts.borrow().clone())
-//     }
+        let mut contacts_hashmap: HashMap<Uuid, Contact> = HashMap::new();
 
-//     fn save(&self, contacts: HashMap<String, Contact>) -> Result<(), AppError> {
-//         let mut contacts_hashmap = self.contacts.borrow_mut();
-//         contacts_hashmap.clear();
+        contacts_hashmap.insert(sample_contacts.id, sample_contacts);
 
-//         for (_key, contact) in contacts {
-//             contacts_hashmap.insert(contact.id.clone(), contact.clone());
-//         }
-//         Ok(())
-//     }
-// }
+        Self {
+            // contacts: std::cell::RefCell::new(HashMap::new()),
+            contacts: std::cell::RefCell::new(contacts_hashmap),
+        }
+    }
+}
+
+impl ContactStore for MemStore {
+    fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError> {
+        Ok(self.contacts.borrow().clone())
+    }
+
+    fn save(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError> {
+        let mut contacts_hashmap = self.contacts.borrow_mut();
+        contacts_hashmap.clear();
+
+        for (_key, contact) in contacts {
+            contacts_hashmap.insert(contact.id, contact);
+        }
+        Ok(())
+    }
+}
 
 #[derive(Clone)]
 pub struct FileStore {
@@ -99,6 +119,43 @@ impl ContactStore for FileStore {
     }
 }
 
+pub struct RemoteStore;
+
+impl RemoteStore {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl Default for RemoteStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ContactStore for RemoteStore {
+    fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError> {
+        let path = "https://api.jsonbin.io/v3/b/6914b5b043b1c97be9a93fc5";
+
+        // Get the contact from remote storage
+        let remote_contacts = import_from_remote(path.to_string())?;
+
+        let mut contact_hashmap: HashMap<Uuid, Contact> = HashMap::new();
+
+        // Loop through contacts and add them to the Hashmap
+        for contact in remote_contacts {
+            contact_hashmap.insert(contact.id, contact);
+        }
+
+        Ok(contact_hashmap)
+    }
+
+    fn save(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError> {
+        println!("Contacts: {:#?}", contacts);
+        Ok(())
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum MergePolicy {
     Keep,
@@ -114,4 +171,13 @@ impl MergePolicy {
             _ => MergePolicy::Keep,
         }
     }
+}
+
+pub fn import_from_remote(from: String) -> Result<Vec<Contact>, AppError> {
+    let client = Client::new();
+    let response = client.get(&from).send();
+
+    let data = response?.json::<JsonBinWrapper>()?;
+
+    Ok(data.record)
 }
