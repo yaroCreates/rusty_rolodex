@@ -1,8 +1,12 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, env};
 
 use chrono::Utc;
+use dotenv::dotenv;
 
-use crate::domain::{ConflictResolution, Contact};
+use crate::{
+    domain::{ConflictResolution, Contact},
+    error::AppError,
+};
 
 pub fn merge_contact_data(local: &Contact, imported: &Contact) -> Contact {
     let mut merged = local.clone();
@@ -102,4 +106,14 @@ pub fn is_more_complete(a: &Contact, b: &Contact) -> bool {
     let a_score = completeness_score(a);
     let b_score = completeness_score(b);
     a_score > b_score
+}
+
+pub fn get_remote_url(key: &str) -> Result<String, AppError> {
+    dotenv().ok();
+    env::var(key).map_err(|_e| AppError::Parse("env key not found".to_string()))
+}
+
+pub fn get_remote_api_key(key: &str) -> Result<String, AppError> {
+    dotenv().ok();
+    env::var(key).map_err(|_e| AppError::Parse("env key not found".to_string()))
 }

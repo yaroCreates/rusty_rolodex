@@ -161,7 +161,9 @@ pub fn run_command_cli() -> Result<(), AppError> {
                 Contact::new(&name, &phone, &email, tags.clone(), Utc::now(), Utc::now());
 
             contacts.add(new_contact)?;
-            store.save(contacts.items.clone())?;
+            store
+                .save(contacts.items.clone())
+                .map_err(|e| AppError::Parse(format!("Error occurred: {}", e)))?;
             println!("✅ Added contact: {} ({})", name, email);
         }
         Commands::List { sort, tag, domain } => {

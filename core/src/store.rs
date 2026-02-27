@@ -6,15 +6,14 @@ use std::{
 };
 
 use chrono::Utc;
-use reqwest::blocking::Client;
+use reqwest::{blocking::Client, header::CONTENT_TYPE};
 use uuid::Uuid;
 
 use crate::{
-    domain::{Contact, ContactRaw, JsonBinWrapper},
+    domain::{Contact, ContactRaw},
     error::AppError,
+    helpers::{get_remote_api_key, get_remote_url},
 };
-
-// const JSON_FILE_PATH: &str = "contacts.json";
 
 // pub trait ContactStore: Send + Sync {
 //     fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError>;
@@ -87,13 +86,12 @@ impl FileStore {
 
 impl ContactStore for FileStore {
     fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError> {
-        // let path_json = Path::new(JSON_FILE_PATH);
+        
         if !self.path.exists() {
             return Ok(HashMap::new());
         }
         let data = fs::read_to_string(&self.path)?;
-        // let contacts: Vec<Contact> = serde_json::from_str(&data)
-        //     .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
+
         let contacts: Vec<ContactRaw> = serde_json::from_str(&data)
             .map_err(|e| AppError::Parse(format!("Error, JSON... : {}", e)))?;
 
@@ -119,11 +117,21 @@ impl ContactStore for FileStore {
     }
 }
 
-pub struct RemoteStore;
+pub struct RemoteStore {
+    pub remote_url: Option<String>,
+    pub remote_url_with_apikey: String,
+}
 
 impl RemoteStore {
     pub fn new() -> Self {
-        Self
+        Self {
+            remote_url: get_remote_url("REMOTE_URL").ok(),
+            remote_url_with_apikey: format!(
+                "{}?apiKey={}",
+                get_remote_url("REMOTE_URL").unwrap(),
+                get_remote_api_key("REMOTE_API_KEY").unwrap()
+            ),
+        }
     }
 }
 
@@ -135,23 +143,40 @@ impl Default for RemoteStore {
 
 impl ContactStore for RemoteStore {
     fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError> {
-        let path = "https://api.jsonbin.io/v3/b/6914b5b043b1c97be9a93fc5";
+        if let Some(url) = &self.remote_url {
+            let remote_contacts = import_from_remote(url.to_string())?;
 
-        // Get the contact from remote storage
-        let remote_contacts = import_from_remote(path.to_string())?;
+            let mut contact_hashmap: HashMap<Uuid, Contact> = HashMap::new();
 
-        let mut contact_hashmap: HashMap<Uuid, Contact> = HashMap::new();
+            // Save contacts to Hashmap
+            for contact in remote_contacts {
+                contact_hashmap.insert(contact.id, contact);
+            }
 
-        // Loop through contacts and add them to the Hashmap
-        for contact in remote_contacts {
-            contact_hashmap.insert(contact.id, contact);
+            Ok(contact_hashmap)
+        } else {
+            Err(AppError::Parse("Url not found".to_string()))
         }
-
-        Ok(contact_hashmap)
     }
 
     fn save(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError> {
-        println!("Contacts: {:#?}", contacts);
+        let remote = RemoteStore::new();
+        let url = remote.remote_url_with_apikey;
+        let contacts_vec: Vec<Contact> = contacts.values().cloned().collect();
+
+        let client = Client::new();
+
+        let response = client
+            .put(&url)
+            .json(&contacts_vec)
+            .header(CONTENT_TYPE, "application/json")
+            .send()?;
+
+        if response.status() == 200 {
+            println!("✅ Successfully saved contacts to {}", url);
+        } else {
+            return Err(AppError::Parse("Error accessing remote base".to_string()));
+        }
         Ok(())
     }
 }
@@ -177,7 +202,7 @@ pub fn import_from_remote(from: String) -> Result<Vec<Contact>, AppError> {
     let client = Client::new();
     let response = client.get(&from).send();
 
-    let data = response?.json::<JsonBinWrapper>()?;
+    let data = response?.json::<Vec<Contact>>()?;
 
-    Ok(data.record)
+    Ok(data)
 }

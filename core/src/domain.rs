@@ -6,7 +6,6 @@ use uuid::Uuid;
 
 use std::{
     collections::{HashMap, HashSet},
-    env,
     fs::File,
     sync::{Arc, Mutex},
     thread,
@@ -20,7 +19,7 @@ use reqwest::{blocking::Client, header::CONTENT_TYPE};
 
 use crate::{
     error::AppError,
-    helpers::{merge_contact_data, resolve_conflict},
+    helpers::{get_remote_url, merge_contact_data, resolve_conflict},
     store::MergePolicy,
     validation::ValidationResponse,
 };
@@ -435,26 +434,20 @@ impl Contacts {
 
     pub fn import_from_remote(&mut self, from: String) -> Result<(), AppError> {
         let client = Client::new();
-        let response = client
-            .get(&from)
-            .header(
-                "X-Master-Key",
-                "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
-            )
-            .send()?;
+        let response = client.get(&from).send()?;
 
         if response.status() == 200 {
             let remote_contacts = response
-                .json::<JsonBinWrapper>()
+                .json::<Vec<Contact>>()
                 .map_err(|e| AppError::Parse(format!("Invalid JSON: {}", e)))?;
 
             println!(
                 "✅ Successfully imported {} contacts to {}",
-                remote_contacts.record.len(),
+                remote_contacts.len(),
                 from
             );
 
-            for contact in remote_contacts.record {
+            for contact in remote_contacts {
                 self.add(contact)?;
             }
         } else {
@@ -469,23 +462,46 @@ impl Contacts {
     pub fn export_to_remote(self, to: String) -> Result<(), AppError> {
         dotenv().ok();
 
-        let master_key = env::var("MASTER_KEY").expect("Error: Master key must be set");
+        let master_key = get_remote_url("REMOTE_URL")?;
 
-        println!("Master_key: {}", master_key);
+        println!("Master_key: {:?}", master_key);
+
+        let test_contact = Contact {
+            id: Uuid::new_v4(),
+            name: "Testing Tester".to_string(),
+            email: "tester@testing.com".to_string(),
+            phone: vec!["1234567890".to_string()],
+            tags: vec![],
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
 
         let client = Client::new();
+
+        // Fetch existing contact from remote
+        let get_response = client.get(&master_key).send()?;
+
+        let mut remote_contacts: Vec<Contact>;
+
+        if get_response.status() == 200 {
+            remote_contacts = get_response
+                .json()
+                .map_err(|e| AppError::Parse(format!("Error getting contact: {}", e)))?;
+        } else {
+            return Err(AppError::Parse(
+                "Error occurred while getting remote store".to_string(),
+            ));
+        }
+
+        // Append new contact(s)
+        remote_contacts.push(test_contact);
+
         let response = client
-            .post(&to)
-            .json(&self.items)
+            .put(&to)
+            .json(&remote_contacts)
             .header(CONTENT_TYPE, "application/json")
-            .header(
-                "X-Master-Key",
-                "$2a$10$7oi2iI1oYy/8Y8RuKoS0Auoie61m7Q.lP8rhX0ZLSPsGasxdSzilO",
-            )
             .send()?;
 
-        println!("Response from export: {:?}", response);
-        // response.status();
         if response.status() == 200 {
             println!(
                 "✅ Successfully pushed {} contacts to {}",
