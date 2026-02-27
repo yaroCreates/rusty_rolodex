@@ -86,7 +86,6 @@ impl FileStore {
 
 impl ContactStore for FileStore {
     fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError> {
-        
         if !self.path.exists() {
             return Ok(HashMap::new());
         }
