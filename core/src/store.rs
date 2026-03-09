@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::{
     domain::{Contact, ContactRaw},
     error::AppError,
-    helpers::{get_remote_api_key, get_remote_url},
+    helpers::{get_key},
 };
 
 // pub trait ContactStore: Send + Sync {
@@ -123,14 +123,43 @@ pub struct RemoteStore {
 
 impl RemoteStore {
     pub fn new() -> Self {
+        dotenv::dotenv().ok();
         Self {
-            remote_url: get_remote_url("REMOTE_URL").ok(),
+            remote_url: get_key("REMOTE_URL").ok(),
             remote_url_with_apikey: format!(
                 "{}?apiKey={}",
-                get_remote_url("REMOTE_URL").unwrap(),
-                get_remote_api_key("REMOTE_API_KEY").unwrap()
+                get_key("REMOTE_URL").unwrap(),
+                get_key("REMOTE_API_KEY").unwrap()
             ),
         }
+    }
+    pub fn import_from_remote(&self, from: String) -> Result<Vec<Contact>, AppError> {
+        let client = Client::new();
+        let response = client.get(&from).send();
+    
+        let data = response?.json::<Vec<Contact>>()?;
+    
+        Ok(data)
+    }
+
+    pub fn save_to_remote(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError> {
+
+        let contacts_vec: Vec<Contact> = contacts.values().cloned().collect();
+
+        let client = Client::new();
+
+        let response = client
+            .put(&self.remote_url_with_apikey)
+            .json(&contacts_vec)
+            .header(CONTENT_TYPE, "application/json")
+            .send()?;
+
+        if response.status() == 200 {
+            println!("✅ Successfully saved contacts to {}", &self.remote_url_with_apikey);
+        } else {
+            return Err(AppError::Parse("Error accessing remote base".to_string()));
+        }
+        Ok(())
     }
 }
 
@@ -143,7 +172,7 @@ impl Default for RemoteStore {
 impl ContactStore for RemoteStore {
     fn load(&self) -> Result<HashMap<Uuid, Contact>, AppError> {
         if let Some(url) = &self.remote_url {
-            let remote_contacts = import_from_remote(url.to_string())?;
+            let remote_contacts = self.import_from_remote(url.to_string())?;
 
             let mut contact_hashmap: HashMap<Uuid, Contact> = HashMap::new();
 
@@ -159,24 +188,7 @@ impl ContactStore for RemoteStore {
     }
 
     fn save(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError> {
-        let remote = RemoteStore::new();
-        let url = remote.remote_url_with_apikey;
-        let contacts_vec: Vec<Contact> = contacts.values().cloned().collect();
-
-        let client = Client::new();
-
-        let response = client
-            .put(&url)
-            .json(&contacts_vec)
-            .header(CONTENT_TYPE, "application/json")
-            .send()?;
-
-        if response.status() == 200 {
-            println!("✅ Successfully saved contacts to {}", url);
-        } else {
-            return Err(AppError::Parse("Error accessing remote base".to_string()));
-        }
-        Ok(())
+        self.save_to_remote(contacts)
     }
 }
 
@@ -197,11 +209,3 @@ impl MergePolicy {
     }
 }
 
-pub fn import_from_remote(from: String) -> Result<Vec<Contact>, AppError> {
-    let client = Client::new();
-    let response = client.get(&from).send();
-
-    let data = response?.json::<Vec<Contact>>()?;
-
-    Ok(data)
-}

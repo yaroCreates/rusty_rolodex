@@ -19,7 +19,7 @@ use reqwest::{blocking::Client, header::CONTENT_TYPE};
 
 use crate::{
     error::AppError,
-    helpers::{get_remote_url, merge_contact_data, resolve_conflict},
+    helpers::{ get_key, merge_contact_data, resolve_conflict},
     store::MergePolicy,
     validation::ValidationResponse,
 };
@@ -462,24 +462,26 @@ impl Contacts {
     pub fn export_to_remote(self, to: String) -> Result<(), AppError> {
         dotenv().ok();
 
-        let master_key = get_remote_url("REMOTE_URL")?;
+        let url = get_key("REMOTE_URL")?;
 
-        println!("Master_key: {:?}", master_key);
+        // let test_contact = Contact {
+        //     id: Uuid::new_v4(),
+        //     name: "Testing Tester".to_string(),
+        //     email: "tester@testing.com".to_string(),
+        //     phone: vec!["1234567890".to_string()],
+        //     tags: vec![],
+        //     created_at: Utc::now(),
+        //     updated_at: Utc::now(),
+        // };
 
-        let test_contact = Contact {
-            id: Uuid::new_v4(),
-            name: "Testing Tester".to_string(),
-            email: "tester@testing.com".to_string(),
-            phone: vec!["1234567890".to_string()],
-            tags: vec![],
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        };
+        let contacts = self.items.clone();
+
+        let contacts_vec: Vec<Contact> = contacts.values().cloned().collect();
 
         let client = Client::new();
 
         // Fetch existing contact from remote
-        let get_response = client.get(&master_key).send()?;
+        let get_response = client.get(&url).send()?;
 
         let mut remote_contacts: Vec<Contact>;
 
@@ -494,7 +496,9 @@ impl Contacts {
         }
 
         // Append new contact(s)
-        remote_contacts.push(test_contact);
+        for contact in contacts_vec {
+            remote_contacts.push(contact);
+        }
 
         let response = client
             .put(&to)

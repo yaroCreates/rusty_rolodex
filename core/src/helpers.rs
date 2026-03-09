@@ -1,7 +1,6 @@
 use std::{collections::HashSet, env};
 
 use chrono::Utc;
-use dotenv::dotenv;
 
 use crate::{
     domain::{ConflictResolution, Contact},
@@ -108,12 +107,7 @@ pub fn is_more_complete(a: &Contact, b: &Contact) -> bool {
     a_score > b_score
 }
 
-pub fn get_remote_url(key: &str) -> Result<String, AppError> {
-    dotenv().ok();
+pub fn get_key(key: &str) -> Result<String, AppError> {
     env::var(key).map_err(|_e| AppError::Parse("env key not found".to_string()))
 }
 
-pub fn get_remote_api_key(key: &str) -> Result<String, AppError> {
-    dotenv().ok();
-    env::var(key).map_err(|_e| AppError::Parse("env key not found".to_string()))
-}
