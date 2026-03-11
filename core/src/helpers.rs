@@ -110,4 +110,3 @@ pub fn is_more_complete(a: &Contact, b: &Contact) -> bool {
 pub fn get_key(key: &str) -> Result<String, AppError> {
     env::var(key).map_err(|_e| AppError::Parse("env key not found".to_string()))
 }
-

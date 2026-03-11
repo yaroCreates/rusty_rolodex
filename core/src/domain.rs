@@ -19,7 +19,7 @@ use reqwest::{blocking::Client, header::CONTENT_TYPE};
 
 use crate::{
     error::AppError,
-    helpers::{ get_key, merge_contact_data, resolve_conflict},
+    helpers::{get_key, merge_contact_data, resolve_conflict},
     store::MergePolicy,
     validation::ValidationResponse,
 };

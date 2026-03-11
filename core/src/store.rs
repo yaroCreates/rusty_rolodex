@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::{
     domain::{Contact, ContactRaw},
     error::AppError,
-    helpers::{get_key},
+    helpers::get_key,
 };
 
 // pub trait ContactStore: Send + Sync {
@@ -136,14 +136,13 @@ impl RemoteStore {
     pub fn import_from_remote(&self, from: String) -> Result<Vec<Contact>, AppError> {
         let client = Client::new();
         let response = client.get(&from).send();
-    
+
         let data = response?.json::<Vec<Contact>>()?;
-    
+
         Ok(data)
     }
 
     pub fn save_to_remote(&self, contacts: HashMap<Uuid, Contact>) -> Result<(), AppError> {
-
         let contacts_vec: Vec<Contact> = contacts.values().cloned().collect();
 
         let client = Client::new();
@@ -155,7 +154,10 @@ impl RemoteStore {
             .send()?;
 
         if response.status() == 200 {
-            println!("✅ Successfully saved contacts to {}", &self.remote_url_with_apikey);
+            println!(
+                "✅ Successfully saved contacts to {}",
+                &self.remote_url_with_apikey
+            );
         } else {
             return Err(AppError::Parse("Error accessing remote base".to_string()));
         }
@@ -208,4 +210,3 @@ impl MergePolicy {
         }
     }
 }
-
