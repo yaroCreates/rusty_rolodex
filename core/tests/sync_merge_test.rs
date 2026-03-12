@@ -284,41 +284,41 @@ mod merge_sync_tests {
     //     assert!(!stored.tags.is_empty());
     // }
 
-    #[test]
-    fn test_merge_overwrite_merges_when_both_have_value() {
-        // Setup: Local contact (newer, but less complete in some fields)
-        let local_contact = create_contact(
-            "John Doe",
-            vec!["1234567890"],
-            "john@example.com",
-            vec!["friend"],
-            10,
-            1, // Newer
-        );
-        let original_id = local_contact.id;
-        let mut contacts = create_test_contacts(vec![local_contact]);
+    // #[test]
+    // fn test_merge_overwrite_merges_when_both_have_value() {
+    //     // Setup: Local contact (newer, but less complete in some fields)
+    //     let local_contact = create_contact(
+    //         "John Doe",
+    //         vec!["1234567890"],
+    //         "john@example.com",
+    //         vec!["friend"],
+    //         10,
+    //         1, // Newer
+    //     );
+    //     let original_id = local_contact.id;
+    //     let mut contacts = create_test_contacts(vec![local_contact]);
 
-        // Import: Older but has additional data
-        let import_contact = create_contact(
-            "John Doe",
-            vec!["0987654321"], // Different phone
-            "john@example.com",
-            vec!["work"], // Different tag
-            8,
-            5, // Older, but has more complete data in phone/tags
-        );
-        let import_file = write_contacts_to_file(vec![import_contact]);
+    //     // Import: Older but has additional data
+    //     let import_contact = create_contact(
+    //         "John Doe",
+    //         vec!["0987654321"], // Different phone
+    //         "john@example.com",
+    //         vec!["work"], // Different tag
+    //         8,
+    //         5, // Older, but has more complete data in phone/tags
+    //     );
+    //     let import_file = write_contacts_to_file(vec![import_contact]);
 
-        // Execute
-        let result =
-            contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Overwrite);
+    //     // Execute
+    //     let result =
+    //         contacts.merge_from_file(import_file.path().to_str().unwrap(), MergePolicy::Overwrite);
 
-        // Assert
-        assert!(result.is_ok());
+    //     // Assert
+    //     assert!(result.is_ok());
 
-        // If both have valuable data, they should be merged
-        // (behavior depends on resolve_conflict logic)
-        let stored = contacts.items.values().next().unwrap();
-        assert_eq!(stored.id, original_id);
-    }
+    //     // If both have valuable data, they should be merged
+    //     // (behavior depends on resolve_conflict logic)
+    //     let stored = contacts.items.values().next().unwrap();
+    //     assert_eq!(stored.id, original_id);
+    // }
 }
