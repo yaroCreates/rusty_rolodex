@@ -141,7 +141,6 @@ async fn main() -> Result<(), AppError> {
         Path(contact_id): Path<Uuid>,
         Json(payload): Json<Contact>,
     ) -> Json<ApiResponse> {
-
         let guard = state.lock().unwrap();
 
         //Get the contacts
