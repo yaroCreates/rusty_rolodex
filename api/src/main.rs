@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     sync::{Arc, Mutex},
 };
 
@@ -28,11 +27,17 @@ pub struct SpecialContact {
     pub id: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiResponse {
+    status: String,
+    message: String,
+    data: Vec<Contact>
+
+}
+
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
-    // let shared_state = Arc::new(Mutex::new(AppState::new("another_contacts.json")));
     let store = Arc::new(Mutex::new(FileStore::new("contacts.json")));
-    // let store=Arc::new(FileStore::new("contacts.json"));
 
     // build our application with a single route
     let app = Router::new()
@@ -56,18 +61,18 @@ async fn main() -> Result<(), AppError> {
 
     async fn post_contacts(
         State(state): State<Arc<Mutex<FileStore>>>,
-        // store: axum::extract::State<Arc<FileStore>>,
         Json(mut payload): Json<Vec<Contact>>,
-    ) -> Json<Vec<Contact>> {
+    ) -> Json<ApiResponse> {
         println!("Axum payload:{:?}", payload.clone());
 
         let guard = state.lock().unwrap();
 
-        let mut new_contacts: HashMap<Uuid, Contact> = HashMap::new();
+        //Get the current contacts
+        let mut contacts = guard.load().expect("Panic happened when fetching contacts");
 
         for contact in payload.iter_mut() {
             let uu_id = Uuid::new_v4();
-            new_contacts.insert(
+            contacts.insert(
                 uu_id,
                 Contact {
                     id: uu_id,
@@ -81,11 +86,22 @@ async fn main() -> Result<(), AppError> {
             );
         }
 
-        guard.save(new_contacts).expect("Panic occurred!");
+        guard.save(contacts).expect("Panic occurred!");
 
         println!("Axum payload after inserting:{:?}", payload);
-        Json(payload)
+
+        let api_response = 
+            ApiResponse {
+                status: "success".to_string(),
+                message: "Contact created successfully".to_string(),
+                data: payload
+            };
+            
+        Json(api_response)
+        
     }
+
+
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
