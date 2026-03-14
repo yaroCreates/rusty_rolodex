@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use axum::{
     Json, Router,
     extract::{Path, State},
-    routing::{ get, put},
+    routing::{get, put},
 };
 use chrono::{DateTime, Utc};
 // use rusty_rolodex::{core::domain::AppState, domain::Contact, prelude::AppError};
@@ -90,7 +90,6 @@ async fn main() -> Result<(), AppError> {
                 },
             );
         }
-
         guard.save(contacts).expect("Panic occurred!");
 
         println!("Axum payload after inserting:{:?}", payload);
@@ -119,7 +118,6 @@ async fn main() -> Result<(), AppError> {
         let api_response: ApiResponse;
 
         if let Some(response) = result {
-
             guard.save(contacts).expect("Panic occured");
 
             api_response = ApiResponse {
@@ -138,7 +136,53 @@ async fn main() -> Result<(), AppError> {
         }
     }
 
-    async fn edit_contact() {}
+    async fn edit_contact(
+        State(state): State<Arc<Mutex<FileStore>>>,
+        Path(contact_id): Path<Uuid>,
+        Json(payload): Json<Contact>,
+    ) -> Json<ApiResponse> {
+
+        let guard = state.lock().unwrap();
+
+        //Get the contacts
+        let mut contacts = guard.load().expect("Error occurred");
+
+        //Get the contact by ID
+        let contact = contacts.get(&contact_id).cloned();
+
+        let api_response: ApiResponse;
+
+        if let Some(mut data) = contact {
+            if !payload.name.is_empty() {
+                data.name = payload.name;
+            }
+            if !payload.email.is_empty() {
+                data.email = payload.email;
+            }
+            if !payload.phone.is_empty() {
+                data.phone = payload.phone;
+            }
+            data.updated_at = Utc::now();
+
+            contacts.insert(data.id, data.clone());
+
+            guard.save(contacts).expect("Panic occurred");
+
+            api_response = ApiResponse {
+                status: "success".to_string(),
+                message: format!("Contact with id:{} updated!", contact_id),
+                data: Some(vec![data]),
+            };
+            Json(api_response)
+        } else {
+            api_response = ApiResponse {
+                status: "error".to_string(),
+                message: format!("Contact with id: {} not found", contact_id),
+                data: None,
+            };
+            Json(api_response)
+        }
+    }
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
